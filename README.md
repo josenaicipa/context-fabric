@@ -135,3 +135,8 @@ MIT — see [LICENSE](./LICENSE).
 ## v0.2.0 RC
 
 The RC adds public agent preflight helpers, clean-room memory record conversion, and a minimal trusted-backend API client. Runtime tokens belong in env/secret stores and must never be used from browser code.
+
+
+## v1.0
+
+Context Fabric v1 adds the stable public SDK surface: preflight, channel routing, budget profiles, policy audit, repo packs, API client, and v1 readiness checks.

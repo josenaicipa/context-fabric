@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { ContextFabricClient, VERSION, memoryRecordsToChunks, type MemoryRecord } from "../src/index.js";
 
 test("version is the release candidate", () => {
-  assert.equal(VERSION, "0.2.0-rc.1");
+  assert.equal(VERSION, "1.0.0");
 });
 
 test("client sends bearer token only when configured", async () => {

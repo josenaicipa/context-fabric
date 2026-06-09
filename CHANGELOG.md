@@ -52,3 +52,9 @@ minor versions may carry breaking changes; they are called out below.
 - Add `ContextFabricClient` for trusted backend/internal API calls.
 - Add public agent preflight template.
 - Document RC release gates and safe publish policy.
+
+
+## 1.0.0
+
+- Add public v1 router, budget profiles, policy audit helpers, repo packs, and readiness contract.
+- Add v1 quickstart, beta report, and security hardening docs.
