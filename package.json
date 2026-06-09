@@ -2,13 +2,14 @@
   "name": "context-fabric",
   "version": "0.1.0",
   "private": true,
-  "description": "Context Fabric — public client SDK, docs, examples, and templates.",
+  "description": "Context Fabric \u2014 public client SDK, docs, examples, and templates.",
   "license": "MIT",
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present"
+    "test": "npm run test --workspaces --if-present",
+    "release:check": "bash scripts/release-check.sh"
   }
 }

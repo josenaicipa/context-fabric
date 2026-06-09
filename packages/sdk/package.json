@@ -16,7 +16,7 @@
     "context-fabric": "./dist/src/cli.js"
   },
   "files": [
-    "dist",
+    "dist/src",
     "README.md"
   ],
   "engines": {

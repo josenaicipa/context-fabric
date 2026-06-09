@@ -92,6 +92,10 @@ node packages/sdk/dist/src/cli.js eval \
 
 - [Quickstart](./docs/QUICKSTART.md) — 5-minute local demo
 - [v1 spec](./docs/V1_SPEC.md) — public contracts and guarantees
+- [Dogfooding](./docs/DOGFOODING.md) — fictional internal-agent scenario
+- [Memory bridge](./docs/MEMORY_BRIDGE.md) — clean-room memory-record helper
+- [API client payloads](./docs/API_CLIENT.md) — JSON bodies for API integrations
+- [Packaging](./docs/PACKAGING.md) — release-check and npm pack smoke
 - [Concepts](./docs/concepts.md) — the data model and pipeline stages
 - [Configuration](./docs/configuration.md) — config file reference
 - [Architecture](./docs/ARCHITECTURE.md) — module design and design properties

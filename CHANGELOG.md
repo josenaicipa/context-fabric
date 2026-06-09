@@ -14,6 +14,7 @@ minor versions may carry breaking changes; they are called out below.
   Node 20 and 22), `CODEOWNERS`, PR and issue templates, `CONTRIBUTING.md`,
   `SECURITY.md`, this changelog, and a `Makefile` task runner.
 - v1 public contracts for citations, context packs, agent handoff text, eval scorecards, dropped-chunk metadata, and CLI `doctor`, `pack`, and `eval` commands.
+- Clean-room memory-record bridge, API payload helpers, public dogfooding docs, and packaging release-check script.
 - Public quickstart, v1 spec, release-hardening checklist, and agent-handoff template.
 
 ### Changed
