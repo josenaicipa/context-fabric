@@ -130,3 +130,8 @@ may depend on the private core. All examples use fictional scopes
 ## License
 
 MIT — see [LICENSE](./LICENSE).
+
+
+## v0.2.0 RC
+
+The RC adds public agent preflight helpers, clean-room memory record conversion, and a minimal trusted-backend API client. Runtime tokens belong in env/secret stores and must never be used from browser code.

@@ -1,6 +1,6 @@
 {
   "name": "context-fabric",
-  "version": "0.1.0",
+  "version": "0.2.0-rc.1",
   "private": true,
   "description": "Context Fabric \u2014 public client SDK, docs, examples, and templates.",
   "license": "MIT",

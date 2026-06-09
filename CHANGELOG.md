@@ -45,3 +45,10 @@ minor versions may carry breaking changes; they are called out below.
 
 [Unreleased]: https://keepachangelog.com/en/1.1.0/
 [0.1.0]: https://keepachangelog.com/en/1.1.0/
+
+
+## 0.2.0-rc.1
+
+- Add `ContextFabricClient` for trusted backend/internal API calls.
+- Add public agent preflight template.
+- Document RC release gates and safe publish policy.

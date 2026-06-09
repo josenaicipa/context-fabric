@@ -25,7 +25,7 @@ test("pack, handoff and eval helpers are public-demo usable", () => {
 
 
 test("public exports keep compatibility", () => {
-  assert.equal(VERSION, "0.1.0");
+  assert.equal(VERSION, "0.2.0-rc.1");
   assert.ok(DEFAULT_RULES.some((rule) => rule.name === "email"));
 });
 
