@@ -8,3 +8,4 @@ Context Fabric v1 defines a public, clean-room contract for scoped context assem
 - Sanitization and token budgeting.
 - Citations and dropped-chunk metadata.
 - Agent handoff text for Claude/Codex/Hermes-style agents.
+- Critical chunks tagged `must_keep` or `critical` are prioritized ahead of optional chunks before `maxChunks` and token budgeting, so token savings do not silently discard declared must-keep context.

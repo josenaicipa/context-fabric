@@ -57,3 +57,12 @@ test("maxChunks caps results", () => {
   const routed = new Router().route(req({ maxChunks: 3 }), chunks);
   assert.equal(routed.length, 3);
 });
+
+test("must_keep chunks are not lost to maxChunks", () => {
+  const chunks = [
+    chunk({ id: "nice-to-have", project: "acme", channel: "#acme", score: 100 }),
+    chunk({ id: "critical", project: "acme", channel: "#acme", tags: ["must_keep"], score: 0 }),
+  ];
+  const routed = new Router().route(req({ maxChunks: 1 }), chunks);
+  assert.deepEqual(routed.map((c) => c.id), ["critical"]);
+});

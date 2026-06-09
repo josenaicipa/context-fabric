@@ -48,3 +48,16 @@ test("pipeline drops chunks over budget", () => {
   assert.deepEqual(bundle.chunks.map((c) => c.id), ["a"]);
   assert.ok(bundle.droppedChunkIds.includes("b"));
 });
+
+test("pipeline prioritizes must_keep before budget trimming", () => {
+  const chunks: ContextChunk[] = [
+    { id: "optional", text: "x".repeat(400), project: "acme", channel: "#acme", score: 100 },
+    { id: "critical", text: "y".repeat(400), project: "acme", channel: "#acme", tags: ["must_keep"], score: 0 },
+  ];
+  const bundle = new Fabric({ budget: { maxTokens: 120 } }).assemble(
+    { query: "q", project: "acme", channel: "#acme", maxChunks: 2 },
+    chunks,
+  );
+  assert.deepEqual(bundle.chunks.map((c) => c.id), ["critical"]);
+  assert.ok(bundle.droppedChunkIds.includes("optional"));
+});
