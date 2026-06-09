@@ -1,0 +1,16 @@
+# Code owners for Context Fabric (public).
+#
+# The repository owner is requested for review on pull requests. See:
+# https://docs.github.com/articles/about-code-owners
+#
+# The boundary policy, doctor, and CI config are the most sensitive surfaces:
+# changes there can weaken the public/private separation, so keep them owned.
+
+# Default owner for everything in the repo.
+*                       @josenaicipa
+
+# Boundary-critical files — never relax without explicit review.
+/boundary.manifest.json @josenaicipa
+/scripts/doctor.sh      @josenaicipa
+/.github/               @josenaicipa
+/SECURITY.md            @josenaicipa

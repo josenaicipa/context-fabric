@@ -29,6 +29,16 @@ npm run build
 npm test
 ```
 
+Or use the repo task runner from the root (`make help` lists every target):
+
+```bash
+make install   # install SDK dependencies
+make build     # compile to dist/
+make test      # build + run the test suite
+make doctor    # public-boundary & hygiene checks
+make ci        # everything CI runs: doctor + install + build + test
+```
+
 ### SDK usage
 
 ```ts
@@ -68,12 +78,25 @@ node packages/sdk/dist/src/cli.js assemble \
 
 - [Concepts](./docs/concepts.md) — the data model and pipeline stages
 - [Configuration](./docs/configuration.md) — config file reference
+- [Architecture](./docs/ARCHITECTURE.md) — module design and design properties
 - [Boundary policy](./docs/boundary.md) — what may and may not live here
+- [Roadmap](./docs/ROADMAP.md) — direction and non-goals
+- [Decisions](./docs/DECISIONS.md) — architecture decision record
+- [Release process](./docs/RELEASE.md) — versioning and publishing
 
 ## Examples & templates
 
 - [`examples/`](./examples) — runnable generic chunk corpus and config
 - [`templates/`](./templates) — starter config and integration snippets
+
+## Contributing & governance
+
+- [Contributing guide](./CONTRIBUTING.md) — setup, workflow, and standards
+- [Security policy](./SECURITY.md) — how to report vulnerabilities privately
+- [Changelog](./CHANGELOG.md) — notable changes per version
+
+CI runs the boundary doctor plus build and tests on every push and pull request
+(see [`.github/workflows/ci.yml`](./.github/workflows/ci.yml)).
 
 ## Boundary
 
