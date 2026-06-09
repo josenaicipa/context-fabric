@@ -4,7 +4,7 @@ import { runPreflight, ContextFabricClient } from "@context-fabric/sdk";
 // then pass sanitized active/verified records into runPreflight.
 const result = runPreflight({
   message: "Prepare a code handoff",
-  scope: { project: "acme-shop", channel: "#engineering" },
+  scope: { project: "acme-shop", channel: "demo" },
   memoryRecords: [],
   repoChunks: [],
 });

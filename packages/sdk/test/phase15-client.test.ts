@@ -34,6 +34,6 @@ test("client debugHtml returns text", async () => {
 
 test("public demo memory fixture includes active and verified, excludes candidate", () => {
   const records = JSON.parse(readFileSync("../../examples/demo-agent-preflight-memory.json", "utf8")) as MemoryRecord[];
-  const chunks = memoryRecordsToChunks(records, { project: "acme-shop", channel: "#engineering" });
+  const chunks = memoryRecordsToChunks(records, { project: "acme-shop", channel: "demo" });
   assert.deepEqual(chunks.map((chunk) => chunk.id), ["memory:demo-active", "memory:demo-verified"]);
 });

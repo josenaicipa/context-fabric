@@ -4,7 +4,7 @@
     "summary": "Demo channel scope",
     "content": "Use this active memory for the demo agent handoff.",
     "project": "acme-shop",
-    "channel": "#engineering",
+    "channel": "demo",
     "status": "active",
     "sensitivity": "public",
     "confidence": 0.9
@@ -14,7 +14,7 @@
     "summary": "Verified demo decision",
     "content": "The demo app uses sanitized public examples only.",
     "project": "acme-shop",
-    "channel": "#engineering",
+    "channel": "demo",
     "status": "verified",
     "sensitivity": "public",
     "confidence": 0.95
@@ -24,7 +24,7 @@
     "summary": "Candidate demo note",
     "content": "This should be excluded unless explicitly requested.",
     "project": "acme-shop",
-    "channel": "#engineering",
+    "channel": "demo",
     "status": "candidate",
     "sensitivity": "public",
     "confidence": 0.4
