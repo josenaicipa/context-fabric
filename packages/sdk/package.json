@@ -1,0 +1,42 @@
+{
+  "name": "@context-fabric/sdk",
+  "version": "0.1.0",
+  "description": "Public client SDK for Context Fabric: scope-aware, sanitized, budget-aware LLM context assembly. Zero runtime dependencies.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    }
+  },
+  "bin": {
+    "context-fabric": "./dist/src/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test \"dist/test/*.test.js\"",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "llm",
+    "context",
+    "rag",
+    "agents",
+    "sanitization",
+    "token-budget"
+  ],
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/node": "^20.11.0"
+  }
+}

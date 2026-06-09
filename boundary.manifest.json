@@ -1,0 +1,40 @@
+{
+  "$schema": "https://context-fabric.dev/schemas/boundary.manifest.v1.json",
+  "manifestVersion": 1,
+  "repo": "context-fabric",
+  "visibility": "public",
+  "role": "client-sdk-and-docs",
+  "description": "Public client/team repository for Context Fabric. Holds the TypeScript SDK/CLI, sanitized documentation, generic examples, and templates. Safe to open-source.",
+  "privateCounterpart": "context-fabric-core",
+  "allowed": {
+    "content": [
+      "TypeScript SDK and CLI source",
+      "public documentation and guides",
+      "generic, fictional examples and templates"
+    ],
+    "exampleData": "fictional scopes only (e.g. acme-shop, other-co)"
+  },
+  "forbidden": {
+    "description": "Nothing operator-specific or proprietary may ever land here.",
+    "patterns": [
+      "any private operator/client project, channel, customer, or lead data",
+      "real channel/project routing maps",
+      "live credentials, API keys, tokens, OAuth secrets",
+      "service-account JSON, production .env contents",
+      "imports of or dependencies on context-fabric-core",
+      "proprietary scoring weights or heuristics flagged as IP"
+    ]
+  },
+  "dependencies": {
+    "rule": "Public packages must declare zero dependency on the private core. The SDK is a clean-room implementation.",
+    "mustNotDependOn": ["context-fabric-core"]
+  },
+  "verification": {
+    "exampleScopesAllowlist": ["acme-shop", "other-co", "demo", "example"],
+    "checks": [
+      "no example uses a real private operator/client project or channel name",
+      "no source file imports context-fabric-core",
+      "no secrets present (grep for keys/tokens/.env)"
+    ]
+  }
+}

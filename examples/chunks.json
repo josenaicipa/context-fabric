@@ -1,0 +1,26 @@
+[
+  {
+    "id": "c1",
+    "text": "Acme Shop checkout flow uses a two-step address form for faster mobile entry.",
+    "project": "acme-shop",
+    "channel": "#acme-shop",
+    "tags": ["approved", "checkout"],
+    "score": 1.0
+  },
+  {
+    "id": "c2",
+    "text": "Billing escalations go to billing@example.com using Bearer abcdef1234567890token.",
+    "project": "acme-shop",
+    "channel": "#acme-shop",
+    "tags": ["approved", "support"],
+    "score": 0.5
+  },
+  {
+    "id": "c3",
+    "text": "A note from a different project that must never leak into acme-shop bundles.",
+    "project": "other-co",
+    "channel": "#other-co",
+    "tags": ["approved"],
+    "score": 5.0
+  }
+]

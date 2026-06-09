@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "routing": [
+    { "project": "acme-shop", "channel": "#acme-shop", "boost": 2.0 },
+    { "project": "acme-shop", "boost": 0.5, "requiredTags": ["approved"] }
+  ],
+  "budget": {
+    "maxTokens": 4000,
+    "reserveTokens": 500,
+    "perChunkMaxTokens": 1200
+  },
+  "sanitization": [
+    { "name": "internal_ticket", "pattern": "TICKET-[0-9]{4,}", "replacement": "[TICKET]" }
+  ]
+}

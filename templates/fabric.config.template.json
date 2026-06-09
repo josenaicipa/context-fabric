@@ -1,0 +1,16 @@
+{
+  "_comment": "Starter Context Fabric config. Replace scopes with your own. Keep real project/channel names and secrets OUT of any repo that is public.",
+  "version": 1,
+  "routing": [
+    { "project": "YOUR_PROJECT", "channel": "#YOUR_CHANNEL", "boost": 2.0 },
+    { "project": "YOUR_PROJECT", "boost": 0.5, "requiredTags": ["approved"] }
+  ],
+  "budget": {
+    "maxTokens": 8000,
+    "reserveTokens": 1000,
+    "perChunkMaxTokens": 2000
+  },
+  "sanitization": [
+    { "name": "internal_id", "pattern": "REF-[0-9]{4,}", "replacement": "[REF]" }
+  ]
+}

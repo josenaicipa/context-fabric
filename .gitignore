@@ -1,0 +1,27 @@
+# Node
+node_modules/
+dist/
+*.tsbuildinfo
+npm-debug.log*
+yarn-error.log
+
+# Secrets & local config — NEVER commit
+.env
+.env.*
+*.local.json
+secrets/
+*-credentials.json
+service-account*.json
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store
+
+# Agent/tooling artifacts
+.claude-flow/
+.swarm/
