@@ -2,7 +2,7 @@
 
 export type Sensitivity = "public" | "internal" | "restricted";
 export type TaskType = "general" | "code" | "research" | "qa" | "summarize" | "agent_handoff";
-export type DropReason = "out_of_scope" | "duplicate" | "sensitivity_blocked" | "per_chunk_cap" | "over_budget";
+export type DropReason = "out_of_scope" | "required_tags" | "candidate_excluded" | "duplicate" | "sensitivity_blocked" | "per_chunk_cap" | "over_budget";
 
 export interface Citation {
   sourceId: string;
@@ -35,6 +35,7 @@ export interface ContextRequest {
   taskType?: TaskType;
   budgetProfile?: string;
   maxSensitivity?: Sensitivity;
+  includeCandidates?: boolean;
 }
 
 export interface RoutingRule {

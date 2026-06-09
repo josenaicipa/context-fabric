@@ -34,6 +34,11 @@ export class Fabric {
     const warnings = [];
     const maxSensitivity = request.maxSensitivity ?? "restricted";
     const allowed = routed.filter((chunk) => {
+      if ((chunk.tags ?? []).includes("candidate") && !request.includeCandidates) {
+        droppedChunks.push({ id: chunk.id, reason: "candidate_excluded", tokens: tokenEstimate(chunk.text) });
+        warnings.push({ code: "candidate_excluded", message: `Chunk ${chunk.id} was tagged candidate and excluded by default.` });
+        return false;
+      }
       const ok = sensitivityRank[chunk.sensitivity ?? "internal"] <= sensitivityRank[maxSensitivity];
       if (!ok) droppedChunks.push({ id: chunk.id, reason: "sensitivity_blocked", tokens: tokenEstimate(chunk.text) });
       return ok;

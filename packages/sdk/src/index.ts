@@ -15,10 +15,12 @@ export { DEFAULT_PUBLIC_ROUTES, detectTaskType, resolveChannelRoute } from "./ch
 export { auditBundle, auditChunkScope } from "./policy.js";
 export { buildRepoPack } from "./repoPack.js";
 export { v1Readiness } from "./v1.js";
+export { publicBenchmarkCases, runPublicBenchmarks, benchmarkReportToMarkdown } from "./benchmarks.js";
 export type { ChannelRoute, RouterDecision } from "./channelRouter.js";
 export type { PolicyAudit, PolicyFinding } from "./policy.js";
 export type { RepoPackInput } from "./repoPack.js";
 export type { V1Readiness } from "./v1.js";
+export type { BenchmarkCase, BenchmarkReport, CaseResult } from "./benchmarks.js";
 export type { MemoryRecord } from "./memory.js";
 export type { AssemblePayload, DebugHtmlPayload } from "./api.js";
 export type { ContextFabricClientOptions } from "./client.js";

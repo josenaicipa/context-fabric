@@ -39,6 +39,7 @@ export function runPreflight(input: PreflightInput, fabric = new Fabric()): Pref
     budgetProfile: input.scope.budgetProfile ?? "handoff",
     maxSensitivity: input.scope.maxSensitivity ?? "internal",
     maxChunks: input.maxChunks,
+    includeCandidates: input.includeCandidates,
   };
   const memoryChunks = memoryRecordsToChunks(input.memoryRecords ?? [], {
     project: input.scope.project,

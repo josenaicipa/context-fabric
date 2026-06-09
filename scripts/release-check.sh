@@ -8,4 +8,5 @@ bash scripts/doctor.sh
 npm ci
 npm run build
 npm test
+npm run benchmark -- artifacts/benchmarks
 npm pack --workspace @context-fabric/sdk --pack-destination /tmp >/tmp/context-fabric-npm-pack.log

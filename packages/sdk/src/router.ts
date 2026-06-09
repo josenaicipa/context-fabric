@@ -36,6 +36,7 @@ export class Router {
   score(chunk: ContextChunk, request: ContextRequest): number {
     // Hard scope guard: different project is never in scope.
     if (chunk.project !== request.project) return EXCLUDED;
+    if (request.channel !== undefined && chunk.channel !== undefined && chunk.channel !== request.channel) return EXCLUDED;
 
     let score = chunk.score ?? 0;
     score += PROJECT_MATCH_WEIGHT;
