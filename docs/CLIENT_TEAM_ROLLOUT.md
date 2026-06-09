@@ -88,6 +88,66 @@ critical facts preserved
 then optimize token reduction
 ```
 
+## v0.1 rollout kit (policy + smoke + report)
+
+The SDK ships a small, public-safe kit so a client or team can validate a rollout
+policy and prove scope isolation locally before connecting an agent. It reads a
+generic channel/team policy (fictional scopes only), checks it carries no
+forbidden scopes or secret material, then runs the public `assemble` path over a
+set of smoke cases and emits a machine-readable report (optionally markdown).
+
+The kit lives entirely in the public SDK; it never imports the private engine.
+
+### What the kit checks
+
+- **Policy validation** — every `project`/`channel` scope is in the fictional
+  allowlist (`acme-shop`, `other-co`, `demo`, `example`) or an `ALL_CAPS`
+  placeholder a team is expected to replace; no secret-like material is present;
+  at least one route is declared.
+- **Smoke per case** — expected chunk IDs survive assembly, forbidden chunk IDs
+  are absent, candidate-tagged chunks are excluded unless the case explicitly
+  sets `includeCandidates`, and the case maps to a covering policy route.
+- **Aggregate gates** — recall ≥ 0.9, contamination = 0, candidate leaks = 0,
+  secret leaks = 0, and zero unrouted cases.
+
+### Run it from the CLI
+
+```bash
+cd packages/sdk
+npm install
+npm run build
+
+# Machine-readable JSON report (exit code 0 = pass, 2 = fail):
+node dist/src/cli.js rollout \
+  --policy ../../templates/channel-context-policy.json \
+  --smoke ../../examples/rollout-smoke.json
+
+# Markdown report written to a file:
+node dist/src/cli.js rollout \
+  --policy ../../templates/channel-context-policy.json \
+  --smoke ../../examples/rollout-smoke.json \
+  --format markdown --out rollout-report.md
+```
+
+### Run it from the SDK
+
+```ts
+import { runRolloutSmoke, validateRolloutPolicy } from "@context-fabric/sdk";
+import policy from "./channel-context-policy.json" assert { type: "json" };
+import cases from "./rollout-smoke.json" assert { type: "json" };
+
+const validation = validateRolloutPolicy(policy);
+if (!validation.passed) throw new Error("policy is not public-safe");
+
+const report = runRolloutSmoke(policy, cases);
+if (!report.passed) process.exit(2);
+```
+
+Start from [`templates/channel-context-policy.json`](../templates/channel-context-policy.json)
+for the policy and [`examples/rollout-smoke.json`](../examples/rollout-smoke.json)
+for the smoke cases. Keep real channel maps and raw memories in your private
+system; only fictional, sanitized scopes belong in this repo.
+
 ## Public/private boundary
 
 This public repo may include:
@@ -110,10 +170,20 @@ This public repo must not include:
 Keep private implementation and operator-specific routing in your private system.
 Only publish clean-room, generic patterns here.
 
-## Minimal success checklist
+## v0.1 acceptance checklist
 
-- [ ] A new user can run `npm test` in `packages/sdk`.
+A client/team adoption of v0.1 is acceptable when all of the following hold:
+
+- [ ] No private data: no real operator/client project, channel, customer, or
+      lead names — only fictional allowlist scopes (`acme-shop`, `other-co`,
+      `demo`, `example`) or `ALL_CAPS` placeholders.
+- [ ] No secrets: no credentials, tokens, API keys, or `.env` values in policy,
+      examples, docs, or tests.
+- [ ] CI green: `npm test` passes in `packages/sdk` and the boundary doctor
+      (`bash scripts/doctor.sh` / `make doctor`) passes.
+- [ ] Example scopes fictional: `validateRolloutPolicy` passes on the policy and
+      `runRolloutSmoke` reports `passed: true` (recall ≥ 0.9, contamination 0,
+      candidate leaks 0, secret leaks 0, 0 unrouted cases).
 - [ ] A team can assemble an `AGENT_CONTEXT` from fictional example data.
-- [ ] Boundary doctor passes.
-- [ ] No private project names or raw memories are committed.
-- [ ] Agent integration has an explicit fallback policy.
+- [ ] No dependency on the private core anywhere in the tree.
+- [ ] Agent integration has an explicit fail-open / fail-closed fallback policy.

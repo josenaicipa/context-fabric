@@ -4,6 +4,7 @@ import { Fabric } from "./fabric.js";
 import { buildPack } from "./packs.js";
 import { renderAgentContext } from "./handoff.js";
 import { runEvals } from "./evals.js";
+import { runRolloutSmoke, rolloutReportToMarkdown, type RolloutPolicy, type RolloutSmokeCase } from "./rollout.js";
 import type { ContextChunk, FabricConfig } from "./schemas.js";
 
 interface Args { [key: string]: string | undefined; }
@@ -58,6 +59,17 @@ function cmdEval(args: Args): number {
   return report.passed ? 0 : 2;
 }
 
+function cmdRollout(args: Args): number {
+  if (!args.policy || !args.smoke) throw new Error("--policy and --smoke are required");
+  const policy = loadJson<RolloutPolicy>(args.policy);
+  const cases = loadJson<RolloutSmokeCase[]>(args.smoke);
+  const report = runRolloutSmoke(policy, cases);
+  const output = args.format === "markdown" ? rolloutReportToMarkdown(report) : JSON.stringify(report, null, 2) + "\n";
+  if (args.out) writeFileSync(args.out, output);
+  else process.stdout.write(output);
+  return report.passed ? 0 : 2;
+}
+
 export function main(argv: string[]): number {
   const { command, args } = parseArgs(argv);
   try {
@@ -66,8 +78,9 @@ export function main(argv: string[]): number {
       case "pack": return cmdPack(args);
       case "doctor": return cmdDoctor(args);
       case "eval": return cmdEval(args);
+      case "rollout": return cmdRollout(args);
       default:
-        process.stderr.write("usage: context-fabric <assemble|pack|doctor|eval> [options]\n");
+        process.stderr.write("usage: context-fabric <assemble|pack|doctor|eval|rollout> [options]\n");
         return command ? 1 : 0;
     }
   } catch (err) {

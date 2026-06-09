@@ -86,6 +86,9 @@ node packages/sdk/dist/src/cli.js eval \
   --query "support" --project acme-shop --channel "#acme-shop" \
   --chunks examples/chunks.json --config examples/fabric.config.json \
   --expect c2 --forbid c3
+node packages/sdk/dist/src/cli.js rollout \
+  --policy templates/channel-context-policy.json \
+  --smoke examples/rollout-smoke.json --format markdown
 ```
 
 ## Documentation
@@ -106,7 +109,7 @@ node packages/sdk/dist/src/cli.js eval \
 - [Roadmap](./docs/ROADMAP.md) — direction and non-goals
 - [Decisions](./docs/DECISIONS.md) — architecture decision record
 - [Release process](./docs/RELEASE.md) — versioning and publishing
-- [Client/team rollout](./docs/CLIENT_TEAM_ROLLOUT.md) — safe adoption phases and channel/thread policy template
+- [Client/team rollout](./docs/CLIENT_TEAM_ROLLOUT.md) — v0.1 rollout kit: policy validation, local smoke, and acceptance checklist
 
 ## Examples & templates
 

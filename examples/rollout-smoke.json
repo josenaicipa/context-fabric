@@ -1,0 +1,67 @@
+[
+  {
+    "name": "acme-shop-support",
+    "scope": { "project": "acme-shop", "channel": "#acme-shop" },
+    "query": "How does Acme Shop checkout work?",
+    "budgetProfile": "code-change",
+    "chunks": [
+      {
+        "id": "rollout:acme-checkout",
+        "text": "Acme Shop checkout uses a two-step address form to speed up mobile entry.",
+        "project": "acme-shop",
+        "channel": "#acme-shop",
+        "tags": ["approved", "checkout", "primary"],
+        "sensitivity": "public",
+        "score": 0.98
+      },
+      {
+        "id": "rollout:acme-candidate",
+        "text": "Unverified candidate note about checkout; must not reach the agent by default.",
+        "project": "acme-shop",
+        "channel": "#acme-shop",
+        "tags": ["candidate"],
+        "sensitivity": "public",
+        "score": 0.4
+      },
+      {
+        "id": "rollout:foreign-other-co",
+        "text": "Other Co internal note that must never leak into an acme-shop bundle.",
+        "project": "other-co",
+        "channel": "#other-co",
+        "tags": ["approved"],
+        "sensitivity": "public",
+        "score": 5.0
+      }
+    ],
+    "expectedChunkIds": ["rollout:acme-checkout"],
+    "forbiddenChunkIds": ["rollout:acme-candidate", "rollout:foreign-other-co"]
+  },
+  {
+    "name": "other-co-research",
+    "scope": { "project": "other-co", "channel": "#other-co" },
+    "query": "Summarize the Other Co returns policy",
+    "budgetProfile": "deep-research",
+    "chunks": [
+      {
+        "id": "rollout:other-returns",
+        "text": "Other Co returns policy allows 30-day returns with a prepaid label.",
+        "project": "other-co",
+        "channel": "#other-co",
+        "tags": ["approved", "primary"],
+        "sensitivity": "public",
+        "score": 0.97
+      },
+      {
+        "id": "rollout:acme-leak",
+        "text": "Acme Shop note that must not appear in an other-co bundle.",
+        "project": "acme-shop",
+        "channel": "#acme-shop",
+        "tags": ["approved"],
+        "sensitivity": "public",
+        "score": 4.0
+      }
+    ],
+    "expectedChunkIds": ["rollout:other-returns"],
+    "forbiddenChunkIds": ["rollout:acme-leak"]
+  }
+]
