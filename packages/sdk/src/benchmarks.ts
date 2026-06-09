@@ -37,6 +37,8 @@ export interface BenchmarkReport {
   contamination: number;
   candidateLeaks: number;
   secretLeaks: number;
+  reliabilityPassed: boolean;
+  reductionTargetMet: boolean;
   passed: boolean;
   caseResults: CaseResult[];
 }
@@ -148,6 +150,8 @@ export function runPublicBenchmarks(cases = publicBenchmarkCases(), targetTokenR
   const secretLeaks = caseResults.reduce((sum, r) => sum + r.secretLeaks, 0);
   const medianTokenReduction = median(reductions);
   const medianSameScopeTokenReduction = median(sameScopeReductions);
+  const reliabilityPassed = recall >= 0.9 && contamination === 0 && candidateLeaks === 0 && secretLeaks === 0;
+  const reductionTargetMet = medianTokenReduction >= targetTokenReduction && medianSameScopeTokenReduction >= targetTokenReduction;
   return {
     cases: caseResults.length,
     targetTokenReduction,
@@ -159,7 +163,9 @@ export function runPublicBenchmarks(cases = publicBenchmarkCases(), targetTokenR
     contamination,
     candidateLeaks,
     secretLeaks,
-    passed: medianTokenReduction >= targetTokenReduction && medianSameScopeTokenReduction >= targetTokenReduction && recall >= 0.9 && contamination === 0 && candidateLeaks === 0 && secretLeaks === 0,
+    reliabilityPassed,
+    reductionTargetMet,
+    passed: reliabilityPassed,
     caseResults,
   };
 }
@@ -184,6 +190,8 @@ export function benchmarkReportToMarkdown(report: BenchmarkReport): string {
     `- Contamination: ${pct(report.contamination)}`,
     `- Candidate leaks: ${report.candidateLeaks}`,
     `- Secret leaks: ${report.secretLeaks}`,
+    `- Reliability gates: ${report.reliabilityPassed ? "PASS" : "FAIL"}`,
+    `- Token reduction target: ${report.reductionTargetMet ? "MET" : "MISSED"}`,
     `- Verdict: ${report.passed ? "PASS" : "FAIL"}`,
     "",
     "| Case | Send-All Tokens | Kept Tokens | Send-All Reduction | Same-Scope Reduction | Recall | Contamination |",

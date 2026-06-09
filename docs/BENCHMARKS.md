@@ -1,14 +1,22 @@
 # Benchmarks
 
-Context Fabric v1 now has a public, reproducible benchmark gate for the first token-reduction target:
+Context Fabric v1 now has a public, reproducible benchmark gate for reliability-first context selection. The first token-reduction target is tracked, but it is not allowed to override important context:
 
 ```txt
-median token reduction >= 75%
 recall >= 90%
 contamination == 0%
 candidate leaks == 0
 secret leaks == 0
 ```
+
+The benchmark also reports whether the current corpus meets:
+
+```txt
+median token reduction >= 75%
+median same-scope token reduction >= 75%
+```
+
+If preserving `must_keep` or `critical` chunks lowers the savings percentage, reliability wins. The report can show `reductionTargetMet=false` while the overall verdict still passes because the selected context stayed trustworthy.
 
 ## Read this before quoting the numbers
 
@@ -48,12 +56,14 @@ Recall: 100.0%
 Contamination: 0.0%
 Candidate leaks: 0
 Secret leaks: 0
+Reliability gates: PASS
+Token reduction target: MET
 Verdict: PASS
 ```
 
 ## What this means
 
-This proves the public SDK can achieve the 75% reduction target on deterministic noisy corpora while preserving the safety gates above.
+This proves the public SDK can achieve the 75% reduction target on deterministic noisy corpora while preserving the safety gates above. The product rule is reliability first: never sacrifice declared important context just to improve the percentage.
 
 ## What it does not mean yet
 

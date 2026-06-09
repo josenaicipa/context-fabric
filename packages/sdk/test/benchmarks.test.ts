@@ -5,9 +5,23 @@ import { benchmarkReportToMarkdown, runPublicBenchmarks } from "../src/index.js"
 test("public benchmark gate proves 75 percent token reduction safely", () => {
   const report = runPublicBenchmarks();
   assert.equal(report.passed, true);
+  assert.equal(report.reliabilityPassed, true);
+  assert.equal(report.reductionTargetMet, true);
   assert.equal(report.cases, 12);
   assert.ok(report.medianTokenReduction >= 0.75);
   assert.ok(report.medianSameScopeTokenReduction >= 0.75);
+  assert.ok(report.recall >= 0.9);
+  assert.equal(report.contamination, 0);
+  assert.equal(report.candidateLeaks, 0);
+  assert.equal(report.secretLeaks, 0);
+});
+
+test("public benchmark verdict prioritizes reliability over token reduction target", () => {
+  const report = runPublicBenchmarks(undefined, 0.999);
+
+  assert.equal(report.passed, true);
+  assert.equal(report.reliabilityPassed, true);
+  assert.equal(report.reductionTargetMet, false);
   assert.ok(report.recall >= 0.9);
   assert.equal(report.contamination, 0);
   assert.equal(report.candidateLeaks, 0);
