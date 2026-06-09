@@ -13,8 +13,12 @@ minor versions may carry breaking changes; they are called out below.
 - Project-maturity scaffolding: GitHub Actions CI (`doctor` + build/test on
   Node 20 and 22), `CODEOWNERS`, PR and issue templates, `CONTRIBUTING.md`,
   `SECURITY.md`, this changelog, and a `Makefile` task runner.
+- v1 public contracts for citations, context packs, agent handoff text, eval scorecards, dropped-chunk metadata, and CLI `doctor`, `pack`, and `eval` commands.
+- Public quickstart, v1 spec, release-hardening checklist, and agent-handoff template.
 
 ### Changed
+
+- `assemble` now emits the full v1 bundle shape, including citations, warnings, budget profile, dropped-chunk details, and full selected chunk objects.
 
 - `scripts/doctor.sh`: the private-core check now matches genuine
   import/dependency edges instead of any prose mentioning the core, and the

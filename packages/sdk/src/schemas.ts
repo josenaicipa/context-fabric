@@ -1,11 +1,15 @@
-/**
- * Public type definitions for the Context Fabric SDK.
- *
- * This is a clean-room client implementation. It shares concepts with the
- * private core engine but no code or data — see boundary.manifest.json.
- */
+/** Public type definitions for the Context Fabric SDK. */
 
 export type Sensitivity = "public" | "internal" | "restricted";
+export type TaskType = "general" | "code" | "research" | "qa" | "summarize" | "agent_handoff";
+export type DropReason = "out_of_scope" | "duplicate" | "sensitivity_blocked" | "per_chunk_cap" | "over_budget";
+
+export interface Citation {
+  sourceId: string;
+  title?: string;
+  uri?: string;
+  locator?: string;
+}
 
 /** A single retrievable unit of context. */
 export interface ContextChunk {
@@ -15,8 +19,9 @@ export interface ContextChunk {
   channel?: string;
   tags?: string[];
   sensitivity?: Sensitivity;
-  /** Optional pre-computed relevance score; higher is better. */
   score?: number;
+  workspace?: string;
+  source?: Citation;
 }
 
 /** A request for context, scoped to a project and optional channel. */
@@ -26,54 +31,84 @@ export interface ContextRequest {
   channel?: string;
   tags?: string[];
   maxChunks?: number;
+  workspace?: string;
+  taskType?: TaskType;
+  budgetProfile?: string;
+  maxSensitivity?: Sensitivity;
 }
 
-/** A rule that adjusts chunk relevance during routing. */
 export interface RoutingRule {
   project: string;
   channel?: string;
   boost?: number;
   requiredTags?: string[];
+  workspace?: string;
+  taskType?: TaskType;
 }
 
-/** Token budget applied by the budgeter. */
 export interface BudgetPolicy {
   maxTokens: number;
   reserveTokens?: number;
   perChunkMaxTokens?: number;
+  name?: string;
 }
 
-/** A named regex rule that redacts sensitive substrings. */
 export interface SanitizationRule {
   name: string;
-  /** Source for a RegExp; compiled with the global flag. */
   pattern: string;
   replacement?: string;
 }
 
-/** The final assembled context returned to a caller. */
+export interface DroppedChunk {
+  id: string;
+  reason: DropReason;
+  tokens?: number;
+}
+
+export interface PolicyWarning {
+  code: string;
+  message: string;
+}
+
 export interface ContextBundle {
   request: ContextRequest;
   chunks: ContextChunk[];
   totalTokens: number;
   droppedChunkIds: string[];
   redactions: number;
+  citations: Citation[];
+  droppedChunks: DroppedChunk[];
+  warnings: PolicyWarning[];
+  budgetProfile: string;
 }
 
-/** Full fabric configuration. */
+export interface ContextPack {
+  version: string;
+  id: string;
+  scope: { workspace?: string; project?: string; channel?: string };
+  summary: string;
+  sources: Citation[];
+  chunks: ContextChunk[];
+  sensitivity: Sensitivity;
+  budgetProfile: string;
+}
+
 export interface FabricConfig {
   version?: number;
   routing?: RoutingRule[];
   budget?: BudgetPolicy;
+  budgetProfiles?: Record<string, BudgetPolicy>;
   sanitization?: SanitizationRule[];
 }
 
-/** Rough token estimate (~4 chars per token, min 1). */
 export function tokenEstimate(text: string): number {
   return Math.max(1, Math.floor(text.length / 4));
 }
 
-/** Render a bundle's chunks as a single string. */
 export function bundleToText(bundle: ContextBundle, separator = "\n\n---\n\n"): string {
   return bundle.chunks.map((c) => c.text).join(separator);
+}
+
+export function citationFor(chunk: ContextChunk): Citation {
+  return chunk.source ?? { sourceId: chunk.id };
 }

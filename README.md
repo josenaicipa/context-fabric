@@ -8,7 +8,9 @@ bundle that is **in scope**, **free of secrets**, and **within a token budget**:
 1. **Route** — rank chunks for the request's project/channel, hard-excluding
    any chunk from a different project.
 2. **Sanitize** — redact emails, tokens, keys, and other secrets from chunk text.
-3. **Budget** — trim to a token ceiling, keeping the most relevant chunks.
+3. **Dedupe** — remove repeated context before spending tokens.
+4. **Budget** — trim to a token ceiling, keeping the most relevant chunks.
+5. **Handoff/eval** — emit agent-ready context packs and deterministic scorecards.
 
 This is the **public** repository: the TypeScript SDK/CLI, documentation,
 generic examples, and templates. It has **zero dependency** on any private
@@ -69,13 +71,27 @@ console.log(bundle.totalTokens, bundle.redactions, bundle.droppedChunkIds);
 ### CLI
 
 ```bash
+node packages/sdk/dist/src/cli.js doctor --config examples/fabric.config.json
 node packages/sdk/dist/src/cli.js assemble \
   --query "checkout" --project acme-shop --channel "#acme-shop" \
   --chunks examples/chunks.json --config examples/fabric.config.json
+node packages/sdk/dist/src/cli.js assemble \
+  --query "checkout" --project acme-shop --channel "#acme-shop" \
+  --chunks examples/chunks.json --config examples/fabric.config.json \
+  --format agent-context
+node packages/sdk/dist/src/cli.js pack \
+  --id acme-demo --summary "Demo pack" --project acme-shop \
+  --chunks examples/chunks.json --output /tmp/acme-demo-pack.json
+node packages/sdk/dist/src/cli.js eval \
+  --query "support" --project acme-shop --channel "#acme-shop" \
+  --chunks examples/chunks.json --config examples/fabric.config.json \
+  --expect c2 --forbid c3
 ```
 
 ## Documentation
 
+- [Quickstart](./docs/QUICKSTART.md) — 5-minute local demo
+- [v1 spec](./docs/V1_SPEC.md) — public contracts and guarantees
 - [Concepts](./docs/concepts.md) — the data model and pipeline stages
 - [Configuration](./docs/configuration.md) — config file reference
 - [Architecture](./docs/ARCHITECTURE.md) — module design and design properties
