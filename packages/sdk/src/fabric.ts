@@ -1,6 +1,6 @@
 /** End-to-end public fabric pipeline: route -> sanitize -> dedupe -> budget. */
 import { Budgeter } from "./budgeter.js";
-import { Router } from "./router.js";
+import { isCriticalChunk, Router } from "./router.js";
 import { Sanitizer } from "./sanitizer.js";
 import { citationFor, tokenEstimate, type ContextBundle, type ContextChunk, type ContextRequest, type DroppedChunk, type FabricConfig, type Sensitivity } from "./schemas.js";
 
@@ -63,9 +63,15 @@ export class Fabric {
     }
     const { name, budgeter } = this.budgetFor(request);
     const { kept, dropped, totalTokens } = budgeter.fit(sanitized);
+    const sanitizedById = new Map(sanitized.map((chunk) => [chunk.id, chunk]));
+    const criticalBudgetDrops: string[] = [];
     for (const id of dropped) {
-      const chunk = sanitized.find((c) => c.id === id);
+      const chunk = sanitizedById.get(id);
+      if (chunk && isCriticalChunk(chunk)) criticalBudgetDrops.push(id);
       droppedChunks.push({ id, reason: "over_budget", tokens: chunk ? tokenEstimate(chunk.text) : undefined });
+    }
+    if (criticalBudgetDrops.length > 0) {
+      warnings.push({ code: "critical_dropped", message: `Critical chunk(s) dropped by token budget: ${criticalBudgetDrops.join(", ")}` });
     }
     if (kept.length === 0) warnings.push({ code: "empty_bundle", message: "The final bundle is empty." });
     return {

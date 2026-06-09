@@ -10,9 +10,9 @@ const CHANNEL_MATCH_WEIGHT = 10;
 const PROJECT_MATCH_WEIGHT = 5;
 const TAG_OVERLAP_WEIGHT = 1;
 const EXCLUDED = Number.NEGATIVE_INFINITY;
-const CRITICAL_TAGS = new Set(["must_keep", "critical"]);
+export const CRITICAL_TAGS = new Set(["must_keep", "critical"]);
 
-function isCritical(chunk: ContextChunk): boolean {
+export function isCriticalChunk(chunk: ContextChunk): boolean {
   return (chunk.tags ?? []).some((tag) => CRITICAL_TAGS.has(tag));
 }
 
@@ -67,8 +67,8 @@ export class Router {
       .map((chunk) => ({ chunk, value: this.score(chunk, request) }))
       .filter((item) => item.value !== EXCLUDED)
       .sort((a, b) => b.value - a.value || a.chunk.id.localeCompare(b.chunk.id));
-    const critical = ranked.filter((item) => isCritical(item.chunk));
-    const optional = ranked.filter((item) => !isCritical(item.chunk));
+    const critical = ranked.filter((item) => isCriticalChunk(item.chunk));
+    const optional = ranked.filter((item) => !isCriticalChunk(item.chunk));
     const remaining = Math.max(0, maxChunks - critical.length);
     return [...critical, ...optional.slice(0, remaining)]
       .map((item) => item.chunk);

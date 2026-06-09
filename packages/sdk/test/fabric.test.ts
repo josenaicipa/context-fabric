@@ -61,3 +61,17 @@ test("pipeline prioritizes must_keep before budget trimming", () => {
   assert.deepEqual(bundle.chunks.map((c) => c.id), ["critical"]);
   assert.ok(bundle.droppedChunkIds.includes("optional"));
 });
+
+test("pipeline warns when critical chunk drops by budget", () => {
+  const chunks: ContextChunk[] = [
+    { id: "critical-a", text: "x".repeat(400), project: "acme", channel: "#acme", tags: ["must_keep"], score: 2 },
+    { id: "critical-b", text: "y".repeat(400), project: "acme", channel: "#acme", tags: ["critical"], score: 1 },
+  ];
+  const bundle = new Fabric({ budget: { maxTokens: 120 } }).assemble(
+    { query: "q", project: "acme", channel: "#acme", maxChunks: 2 },
+    chunks,
+  );
+  assert.deepEqual(bundle.chunks.map((c) => c.id), ["critical-a"]);
+  assert.ok(bundle.droppedChunkIds.includes("critical-b"));
+  assert.ok(bundle.warnings.some((warning) => warning.code === "critical_dropped"));
+});
