@@ -31,7 +31,7 @@ test("template rollout policy validates clean", () => {
 test("validation flags a non-allowlisted private scope", () => {
   const bad: RolloutPolicy = {
     version: 1,
-    routes: [{ match: { channel: "#real-client-acme" }, scope: { project: "real-client-acme", channel: "#real-client-acme" } }],
+    routes: [{ match: { channel: "#off-allowlist-scope" }, scope: { project: "off-allowlist-scope", channel: "#off-allowlist-scope" } }],
   };
   const result = validateRolloutPolicy(bad);
   assert.equal(result.passed, false);

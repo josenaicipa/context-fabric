@@ -110,11 +110,15 @@ node packages/sdk/dist/src/cli.js rollout \
 - [Decisions](./docs/DECISIONS.md) — architecture decision record
 - [Release process](./docs/RELEASE.md) — versioning and publishing
 - [Client/team rollout](./docs/CLIENT_TEAM_ROLLOUT.md) — v0.1 rollout kit: policy validation, local smoke, and acceptance checklist
+- [Onboarding & commercial playbook](./docs/PLAYBOOK.md) — who it's for, 30/60/90-min onboarding scripts, acceptance gates, and how to read a PASS/FAIL report
 
 ## Examples & templates
 
 - [`examples/`](./examples) — runnable generic chunk corpus and config
 - [`templates/`](./templates) — starter config and integration snippets
+- [Stakeholder intake](./templates/stakeholder-intake.md) — onboarding questionnaire (placeholders only)
+- [Rollout readiness checklist](./templates/rollout-readiness-checklist.md) — pre-go-live acceptance gate
+- [Handoff message](./templates/handoff-message.md) — sample team/client handoff note
 
 ## Contributing & governance
 
