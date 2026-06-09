@@ -24,12 +24,12 @@
     {
       "match": {
         "platform": "discord",
-        "channel": "#support-triage",
+        "channel": "#acme-shop",
         "threadPrefix": "incident-"
       },
       "scope": {
         "project": "acme-shop",
-        "channel": "#support-triage"
+        "channel": "#acme-shop"
       },
       "budgetProfile": "quick-answer",
       "notes": "Example thread pattern. Keep incident data sanitized before adding it to a public demo."
@@ -37,11 +37,11 @@
     {
       "match": {
         "platform": "slack",
-        "channel": "#other-co-research"
+        "channel": "#other-co"
       },
       "scope": {
         "project": "other-co",
-        "channel": "#other-co-research"
+        "channel": "#other-co"
       },
       "budgetProfile": "deep-research",
       "notes": "Second fictional company to demonstrate project isolation."
