@@ -96,6 +96,8 @@ node packages/sdk/dist/src/cli.js eval \
 - [Memory bridge](./docs/MEMORY_BRIDGE.md) — clean-room memory-record helper
 - [API client payloads](./docs/API_CLIENT.md) — JSON bodies for API integrations
 - [Packaging](./docs/PACKAGING.md) — release-check and npm pack smoke
+- [Agent preflight](./docs/AGENT_PREFLIGHT.md) — clean-room agent preflight helper
+- [Release candidate](./docs/RELEASE_RC.md) — RC checklist
 - [Concepts](./docs/concepts.md) — the data model and pipeline stages
 - [Configuration](./docs/configuration.md) — config file reference
 - [Architecture](./docs/ARCHITECTURE.md) — module design and design properties
