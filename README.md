@@ -106,6 +106,7 @@ node packages/sdk/dist/src/cli.js eval \
 - [Roadmap](./docs/ROADMAP.md) — direction and non-goals
 - [Decisions](./docs/DECISIONS.md) — architecture decision record
 - [Release process](./docs/RELEASE.md) — versioning and publishing
+- [Client/team rollout](./docs/CLIENT_TEAM_ROLLOUT.md) — safe adoption phases and channel/thread policy template
 
 ## Examples & templates
 

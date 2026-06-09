@@ -1,0 +1,56 @@
+{
+  "$schema": "https://context-fabric.dev/schemas/channel-context-policy.v1.json",
+  "version": 1,
+  "description": "Sanitized example policy for mapping team channels or threads to Context Fabric scopes.",
+  "defaults": {
+    "budgetProfile": "handoff",
+    "fallback": "fail-open",
+    "forbiddenDataClasses": ["secrets", "raw_credentials", "customer_pii"],
+    "criticalTags": ["critical", "must_keep"]
+  },
+  "routes": [
+    {
+      "match": {
+        "platform": "discord",
+        "channel": "#acme-shop"
+      },
+      "scope": {
+        "project": "acme-shop",
+        "channel": "#acme-shop"
+      },
+      "budgetProfile": "code-change",
+      "notes": "Use for Acme Shop engineering and support-agent context."
+    },
+    {
+      "match": {
+        "platform": "discord",
+        "channel": "#support-triage",
+        "threadPrefix": "incident-"
+      },
+      "scope": {
+        "project": "acme-shop",
+        "channel": "#support-triage"
+      },
+      "budgetProfile": "quick-answer",
+      "notes": "Example thread pattern. Keep incident data sanitized before adding it to a public demo."
+    },
+    {
+      "match": {
+        "platform": "slack",
+        "channel": "#other-co-research"
+      },
+      "scope": {
+        "project": "other-co",
+        "channel": "#other-co-research"
+      },
+      "budgetProfile": "deep-research",
+      "notes": "Second fictional company to demonstrate project isolation."
+    }
+  ],
+  "guardrails": [
+    "Never use context from a different project unless a route explicitly allows cross-project comparison.",
+    "Treat redacted values as unavailable, not as blanks to infer.",
+    "Keep raw memories and private channel maps outside the public repository.",
+    "Run an eval case before broadening a policy to more channels or threads."
+  ]
+}
