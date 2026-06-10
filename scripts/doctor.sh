@@ -35,7 +35,7 @@ SECRET_EXCLUDE='^(examples/|templates/|.*/test/|scripts/doctor\.sh$|boundary\.ma
 mapfile -t SCAN_FILES < <(printf '%s\n' "${ALL_FILES[@]}" | grep -Ev "$SECRET_EXCLUDE")
 mapfile -t CODE_FILES < <(printf '%s\n' "${SCAN_FILES[@]}" | grep -Ev '\.(md|markdown)$')
 
-grep_files() { local pat="$1"; shift; [ "$#" -eq 0 ] && return 1; grep -InE "$pat" "$@" 2>/dev/null; }
+grep_files() { local pat="$1"; shift; [ "$#" -eq 0 ] && return 1; grep -InE -e "$pat" -- "$@" 2>/dev/null; }
 
 # ---- 1. boundary ------------------------------------------------------------
 section "Boundary manifest"

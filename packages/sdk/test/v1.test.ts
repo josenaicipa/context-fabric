@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { DEFAULT_RULES, Fabric, VERSION, buildPack, renderAgentContext, runEvals, type ContextChunk } from "../src/index.js";
+import { DEFAULT_RULES, Fabric, SanitizerRuleError, VERSION, buildPack, renderAgentContext, runEvals, type ContextChunk } from "../src/index.js";
 
 const chunks: ContextChunk[] = [
   { id: "c1", text: "Acme support onboarding", project: "acme-shop", channel: "#support", sensitivity: "public", source: { sourceId: "doc-1", title: "Docs" }, score: 2 },
@@ -27,6 +27,7 @@ test("pack, handoff and eval helpers are public-demo usable", () => {
 test("public exports keep compatibility", () => {
   assert.equal(VERSION, "1.0.0");
   assert.ok(DEFAULT_RULES.some((rule) => rule.name === "email"));
+  assert.equal(typeof SanitizerRuleError, "function");
 });
 
 test("v1 drop paths are observable", () => {

@@ -5,9 +5,13 @@ import { buildPack } from "./packs.js";
 import { renderAgentContext } from "./handoff.js";
 import { runEvals } from "./evals.js";
 import { runRolloutSmoke, rolloutReportToMarkdown, type RolloutPolicy, type RolloutSmokeCase } from "./rollout.js";
+import { VERSION } from "./index.js";
 import type { ContextChunk, FabricConfig } from "./schemas.js";
 
 interface Args { [key: string]: string | undefined; }
+
+/** Flags that take no value; treated as booleans when present. */
+const BOOLEAN_FLAGS = new Set(["includeCandidates", "help", "version"]);
 
 function parseArgs(argv: string[]): { command: string; args: Args } {
   const [command = "", ...rest] = argv;
@@ -15,7 +19,15 @@ function parseArgs(argv: string[]): { command: string; args: Args } {
   for (let i = 0; i < rest.length; i++) {
     const key = rest[i];
     if (!key?.startsWith("--")) continue;
-    args[key.slice(2)] = rest[i + 1];
+    const name = key.slice(2);
+    const next = rest[i + 1];
+    // A boolean flag, or a flag immediately followed by another flag / nothing,
+    // is a presence-only switch — don't swallow the following token as its value.
+    if (BOOLEAN_FLAGS.has(name) || next === undefined || next.startsWith("--")) {
+      args[name] = "true";
+      continue;
+    }
+    args[name] = next;
     i += 1;
   }
   return { command, args };
@@ -23,10 +35,57 @@ function parseArgs(argv: string[]): { command: string; args: Args } {
 
 function loadJson<T>(path: string): T { return JSON.parse(readFileSync(path, "utf-8")) as T; }
 function loadConfig(args: Args): FabricConfig { return args.config ? loadJson<FabricConfig>(args.config) : {}; }
+function parseTags(value: string | undefined): string[] | undefined {
+  if (value === undefined) return undefined;
+  const tags = value.split(",").map((t) => t.trim()).filter((t) => t.length > 0);
+  return tags.length > 0 ? tags : undefined;
+}
 function requestFrom(args: Args) {
   if (!args.query || !args.project) throw new Error("--query and --project are required");
-  return { query: args.query, project: args.project, channel: args.channel, workspace: args.workspace, maxChunks: args.maxChunks ? Number(args.maxChunks) : undefined, taskType: args.taskType as never, budgetProfile: args.budgetProfile, maxSensitivity: args.maxSensitivity as never };
+  return {
+    query: args.query,
+    project: args.project,
+    channel: args.channel,
+    workspace: args.workspace,
+    tags: parseTags(args.tags),
+    maxChunks: args.maxChunks ? Number(args.maxChunks) : undefined,
+    taskType: args.taskType as never,
+    budgetProfile: args.budgetProfile,
+    maxSensitivity: args.maxSensitivity as never,
+    includeCandidates: args.includeCandidates === "true" ? true : undefined,
+  };
 }
+
+const USAGE = `context-fabric ${VERSION}
+
+Usage: context-fabric <command> [options]
+
+Commands:
+  assemble   Route, sanitize, and budget chunks into a context bundle
+  pack       Build a portable context pack from chunks
+  doctor     Report effective config (version, routing rules)
+  eval       Score a single assemble case (expected/forbidden chunks)
+  rollout    Validate a rollout policy and run the local assemble smoke
+
+Global flags:
+  --help, -h       Show this help and exit
+  --version, -v    Print the SDK version and exit
+
+Common options:
+  --query <q>              Request query (assemble/eval)
+  --project <p>            Scope project (required for assemble/eval)
+  --channel <c>            Scope channel
+  --workspace <w>          Scope workspace
+  --tags <a,b,c>           Comma-separated request tags (boost tag overlap)
+  --maxChunks <n>          Cap on routed chunks
+  --taskType <t>           Task type hint
+  --budgetProfile <name>   Named budget profile
+  --maxSensitivity <s>     Ceiling: public | internal | restricted (default public)
+  --includeCandidates      Allow candidate-tagged chunks through
+  --chunks <path>          JSON file of ContextChunk[]
+  --config <path>          JSON FabricConfig
+  --format <fmt>           assemble: agent-context; rollout: markdown
+`;
 
 function cmdAssemble(args: Args): number {
   if (!args.chunks) throw new Error("--chunks is required");
@@ -72,6 +131,15 @@ function cmdRollout(args: Args): number {
 
 export function main(argv: string[]): number {
   const { command, args } = parseArgs(argv);
+  // Global flags work as a bare command (`--help`) or alongside one (`assemble --help`).
+  if (command === "--help" || command === "-h" || command === "help" || args.help) {
+    process.stdout.write(USAGE);
+    return 0;
+  }
+  if (command === "--version" || command === "-v" || command === "version" || args.version) {
+    process.stdout.write(`${VERSION}\n`);
+    return 0;
+  }
   try {
     switch (command) {
       case "assemble": return cmdAssemble(args);
@@ -80,7 +148,7 @@ export function main(argv: string[]): number {
       case "eval": return cmdEval(args);
       case "rollout": return cmdRollout(args);
       default:
-        process.stderr.write("usage: context-fabric <assemble|pack|doctor|eval|rollout> [options]\n");
+        process.stderr.write(USAGE);
         return command ? 1 : 0;
     }
   } catch (err) {

@@ -8,6 +8,7 @@
  * report and optional markdown. Clean-room: no dependency on the private core.
  */
 import { Fabric } from "./fabric.js";
+import { secretDetectionPatterns } from "./secret-patterns.js";
 import type { ContextChunk, ContextRequest, Sensitivity } from "./schemas.js";
 
 export interface RolloutRouteMatch {
@@ -97,18 +98,12 @@ export interface RolloutReport {
 /** Fictional scopes that are safe to ship in the public repo (mirrors boundary.manifest.json). */
 export const DEFAULT_SCOPE_ALLOWLIST = ["acme-shop", "other-co", "demo", "example"] as const;
 
-/** Secret signatures that must never appear in a public-safe policy or smoke fixture. */
-const SECRET_PATTERNS: ReadonlyArray<RegExp> = [
-  /AKIA[0-9A-Z]{16}/,
-  /ghp_[A-Za-z0-9]{36}/,
-  /github_pat_[A-Za-z0-9_]{30,}/,
-  /xox[baprs]-[A-Za-z0-9-]{10,}/,
-  /sk-[A-Za-z0-9]{32,}/,
-  /sk_live_[0-9a-zA-Z]{24,}/,
-  /-----BEGIN [A-Z ]*PRIVATE KEY-----/,
-  /[Bb]earer\s+[A-Za-z0-9._-]{20,}/,
-  /(?:password|api[_-]?key|access[_-]?token|client[_-]?secret)["']?\s*[:=]\s*["'][^"'\s]{12,}/i,
-];
+/**
+ * Secret signatures that must never appear in a public-safe policy or smoke
+ * fixture. Sourced from the shared {@link secretDetectionPatterns} so policy
+ * scanning and runtime sanitizer redaction cannot drift apart.
+ */
+const SECRET_PATTERNS: ReadonlyArray<RegExp> = secretDetectionPatterns();
 
 function baseScope(value: string): string {
   return value.startsWith("#") ? value.slice(1) : value;

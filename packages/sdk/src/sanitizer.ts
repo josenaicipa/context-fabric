@@ -3,36 +3,60 @@
  *
  * Redacts secrets and PII from chunk text before it leaves the fabric. Ships
  * with a baseline ruleset and accepts extra rules from configuration.
+ *
+ * The secret families live in {@link SECRET_SANITIZATION_RULES} so runtime
+ * redaction stays in lockstep with the rollout/boundary detection patterns;
+ * email is added here as the one PII family the detection set deliberately
+ * omits.
  */
+import { SECRET_SANITIZATION_RULES } from "./secret-patterns.js";
 import type { ContextChunk, SanitizationRule } from "./schemas.js";
 
-/** Baseline rules applied to every sanitizer instance. */
-export const DEFAULT_RULES: SanitizationRule[] = [
-  {
-    name: "email",
-    pattern: "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}",
-    replacement: "[EMAIL]",
-  },
-  {
-    name: "aws_access_key",
-    pattern: "AKIA[0-9A-Z]{16}",
-    replacement: "[AWS_KEY]",
-  },
-  {
-    name: "bearer_token",
-    pattern: "[Bb]earer\\s+[a-zA-Z0-9._\\-]{12,}",
-    replacement: "[BEARER_TOKEN]",
-  },
-  {
-    name: "generic_secret_assignment",
-    pattern: "(api[_-]?key|secret|token|password)\\s*[:=]\\s*['\"]?[^\\s'\"]{6,}",
-    replacement: "$1=[REDACTED]",
-  },
-];
+/** Email is PII rather than a credential, so it lives outside the shared secret set. */
+const EMAIL_RULE: SanitizationRule = {
+  name: "email",
+  pattern: "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}",
+  replacement: "[EMAIL]",
+};
+
+/**
+ * Baseline rules applied to every sanitizer instance: email PII plus the full
+ * shared high-confidence secret families (GitHub, Slack, Google, Stripe, AWS,
+ * `sk-`, PEM private keys, bearer tokens, and generic credential assignments).
+ */
+export const DEFAULT_RULES: SanitizationRule[] = [EMAIL_RULE, ...SECRET_SANITIZATION_RULES];
 
 interface CompiledRule {
   regex: RegExp;
   replacement: string;
+}
+
+/** Thrown when a sanitization rule carries an invalid regular expression. */
+export class SanitizerRuleError extends Error {
+  constructor(
+    readonly ruleName: string,
+    readonly pattern: string,
+    readonly cause: unknown,
+  ) {
+    const reason = cause instanceof Error ? cause.message : String(cause);
+    super(`Sanitizer: invalid regex in rule "${ruleName}" (/${pattern}/): ${reason}`);
+    this.name = "SanitizerRuleError";
+  }
+}
+
+function compileRule(rule: SanitizationRule): CompiledRule {
+  try {
+    // Global flag so subn-style counting and full replacement work.
+    // NOTE: patterns run against untrusted chunk text — keep them linear-time
+    // to avoid ReDoS. User-supplied rules are the caller's responsibility.
+    return {
+      regex: new RegExp(rule.pattern, "g"),
+      replacement: rule.replacement ?? "[REDACTED]",
+    };
+  } catch (err) {
+    // Surface a clear, actionable error instead of a cryptic raw RegExp throw.
+    throw new SanitizerRuleError(rule.name, rule.pattern, err);
+  }
 }
 
 export class Sanitizer {
@@ -40,11 +64,7 @@ export class Sanitizer {
 
   constructor(extraRules: SanitizationRule[] = [], useDefaults = true) {
     const rules = useDefaults ? [...DEFAULT_RULES, ...extraRules] : [...extraRules];
-    this.compiled = rules.map((rule) => ({
-      // Global flag so subn-style counting and full replacement work.
-      regex: new RegExp(rule.pattern, "g"),
-      replacement: rule.replacement ?? "[REDACTED]",
-    }));
+    this.compiled = rules.map(compileRule);
   }
 
   sanitizeText(text: string): { text: string; redactions: number } {

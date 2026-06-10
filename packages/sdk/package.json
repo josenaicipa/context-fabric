@@ -17,7 +17,8 @@
   },
   "files": [
     "dist/src",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "engines": {
     "node": ">=20"
@@ -25,7 +26,9 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node --test dist/test/*.test.js",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepack": "cp ../../LICENSE ./LICENSE",
+    "prepublishOnly": "npm run build && npm test"
   },
   "keywords": [
     "llm",

@@ -11,7 +11,7 @@ const memories: MemoryRecord[] = [
 test("memoryRecordsToChunks excludes candidates and cross-project records by default", () => {
   const chunks = memoryRecordsToChunks(memories, { project: "acme-shop", channel: "#support" });
   assert.deepEqual(chunks.map((chunk) => chunk.id), ["memory:active"]);
-  const bundle = new Fabric().assemble({ query: "handoff", project: "acme-shop", channel: "#support" }, chunks);
+  const bundle = new Fabric().assemble({ query: "handoff", project: "acme-shop", channel: "#support", maxSensitivity: "internal" }, chunks);
   assert.equal(bundle.chunks[0]?.id, "memory:active");
 });
 

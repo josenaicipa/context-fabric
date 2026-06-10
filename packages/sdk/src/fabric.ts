@@ -1,4 +1,5 @@
 /** End-to-end public fabric pipeline: route -> sanitize -> dedupe -> budget. */
+import { createHash } from "node:crypto";
 import { Budgeter } from "./budgeter.js";
 import { isCriticalChunk, Router } from "./router.js";
 import { Sanitizer } from "./sanitizer.js";
@@ -6,8 +7,23 @@ import { citationFor, tokenEstimate, type ContextBundle, type ContextChunk, type
 
 const sensitivityRank: Record<Sensitivity, number> = { public: 0, internal: 1, restricted: 2 };
 
+/**
+ * Fail-closed default ceiling: when a caller omits `maxSensitivity`, only
+ * `public` chunks pass. This keeps a default bundle aligned with the default
+ * `auditBundle` ceiling (also `public`), so an un-opted-in bundle never carries
+ * internal/restricted material. Callers opt in explicitly to widen the ceiling.
+ */
+const DEFAULT_MAX_SENSITIVITY: Sensitivity = "public";
+
+/**
+ * Dedupe fingerprint over the *full* normalized text. Hashing (rather than a
+ * 400-char prefix) prevents two distinct long chunks that share an opening from
+ * being collapsed as duplicates, while keeping keys bounded. `node:crypto` is a
+ * built-in, so this adds no dependency.
+ */
 function fingerprint(text: string): string {
-  return text.trim().toLowerCase().replace(/\s+/g, " ").slice(0, 400);
+  const normalized = text.trim().toLowerCase().replace(/\s+/g, " ");
+  return createHash("sha256").update(normalized).digest("hex");
 }
 
 export class Fabric {
@@ -32,7 +48,7 @@ export class Fabric {
     const routedIds = new Set(routed.map((c) => c.id));
     const droppedChunks: DroppedChunk[] = chunks.filter((c) => !routedIds.has(c.id)).map((c) => ({ id: c.id, reason: "out_of_scope", tokens: tokenEstimate(c.text) }));
     const warnings = [];
-    const maxSensitivity = request.maxSensitivity ?? "restricted";
+    const maxSensitivity = request.maxSensitivity ?? DEFAULT_MAX_SENSITIVITY;
     const allowed = routed.filter((chunk) => {
       if ((chunk.tags ?? []).includes("candidate") && !request.includeCandidates) {
         droppedChunks.push({ id: chunk.id, reason: "candidate_excluded", tokens: tokenEstimate(chunk.text) });
