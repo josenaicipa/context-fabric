@@ -11,15 +11,24 @@ import {
 } from "../src/index.js";
 
 function loadPolicy(): RolloutPolicy {
-  return JSON.parse(readFileSync("../../templates/channel-context-policy.json", "utf8")) as RolloutPolicy;
+  return JSON.parse(
+    readFileSync("../../templates/channel-context-policy.json", "utf8"),
+  ) as RolloutPolicy;
 }
 
 function loadSmoke(): RolloutSmokeCase[] {
-  return JSON.parse(readFileSync("../../examples/rollout-smoke.json", "utf8")) as RolloutSmokeCase[];
+  return JSON.parse(
+    readFileSync("../../examples/rollout-smoke.json", "utf8"),
+  ) as RolloutSmokeCase[];
 }
 
 test("default scope allowlist is fictional-only", () => {
-  assert.deepEqual([...DEFAULT_SCOPE_ALLOWLIST].sort(), ["acme-shop", "demo", "example", "other-co"]);
+  assert.deepEqual([...DEFAULT_SCOPE_ALLOWLIST].sort(), [
+    "acme-shop",
+    "demo",
+    "example",
+    "other-co",
+  ]);
 });
 
 test("template rollout policy validates clean", () => {
@@ -31,11 +40,18 @@ test("template rollout policy validates clean", () => {
 test("validation flags a non-allowlisted private scope", () => {
   const bad: RolloutPolicy = {
     version: 1,
-    routes: [{ match: { channel: "#off-allowlist-scope" }, scope: { project: "off-allowlist-scope", channel: "#off-allowlist-scope" } }],
+    routes: [
+      {
+        match: { channel: "#off-allowlist-scope" },
+        scope: { project: "off-allowlist-scope", channel: "#off-allowlist-scope" },
+      },
+    ],
   };
   const result = validateRolloutPolicy(bad);
   assert.equal(result.passed, false);
-  assert.ok(result.findings.some((f) => f.code === "non_allowlisted_scope" && f.severity === "blocker"));
+  assert.ok(
+    result.findings.some((f) => f.code === "non_allowlisted_scope" && f.severity === "blocker"),
+  );
 });
 
 test("validation flags a non-allowlisted private workspace", () => {
@@ -52,7 +68,10 @@ test("validation flags a non-allowlisted private workspace", () => {
   assert.equal(result.passed, false);
   assert.ok(
     result.findings.some(
-      (f) => f.code === "non_allowlisted_scope" && f.severity === "blocker" && /off-allowlist-ws/.test(f.message),
+      (f) =>
+        f.code === "non_allowlisted_scope" &&
+        f.severity === "blocker" &&
+        /off-allowlist-ws/.test(f.message),
     ),
   );
 });
@@ -60,7 +79,12 @@ test("validation flags a non-allowlisted private workspace", () => {
 test("validation allows an allowlisted workspace", () => {
   const ok: RolloutPolicy = {
     version: 1,
-    routes: [{ match: { channel: "#acme-shop" }, scope: { project: "acme-shop", channel: "#acme-shop", workspace: "demo" } }],
+    routes: [
+      {
+        match: { channel: "#acme-shop" },
+        scope: { project: "acme-shop", channel: "#acme-shop", workspace: "demo" },
+      },
+    ],
   };
   assert.equal(validateRolloutPolicy(ok).passed, true);
 });
@@ -68,7 +92,12 @@ test("validation allows an allowlisted workspace", () => {
 test("validation allows ALL_CAPS placeholders teams must replace", () => {
   const tmpl: RolloutPolicy = {
     version: 1,
-    routes: [{ match: { channel: "#YOUR_CHANNEL" }, scope: { project: "YOUR_PROJECT", channel: "#YOUR_CHANNEL" } }],
+    routes: [
+      {
+        match: { channel: "#YOUR_CHANNEL" },
+        scope: { project: "YOUR_PROJECT", channel: "#YOUR_CHANNEL" },
+      },
+    ],
   };
   assert.equal(validateRolloutPolicy(tmpl).passed, true);
 });
@@ -76,7 +105,13 @@ test("validation allows ALL_CAPS placeholders teams must replace", () => {
 test("validation flags secret-like material in a policy", () => {
   const leaky: RolloutPolicy = {
     version: 1,
-    routes: [{ match: { channel: "#acme-shop" }, scope: { project: "acme-shop", channel: "#acme-shop" }, notes: "token ghp_0123456789abcdef0123456789abcdef0123" }],
+    routes: [
+      {
+        match: { channel: "#acme-shop" },
+        scope: { project: "acme-shop", channel: "#acme-shop" },
+        notes: "token ghp_0123456789abcdef0123456789abcdef0123",
+      },
+    ],
   };
   const result = validateRolloutPolicy(leaky);
   assert.equal(result.passed, false);
@@ -116,7 +151,16 @@ test("a smoke case with no covering route is reported as unrouted and fails", ()
       name: "uncovered-scope",
       scope: { project: "example", channel: "#example" },
       query: "anything",
-      chunks: [{ id: "x1", text: "kept", project: "example", channel: "#example", tags: ["primary"], sensitivity: "public" }],
+      chunks: [
+        {
+          id: "x1",
+          text: "kept",
+          project: "example",
+          channel: "#example",
+          tags: ["primary"],
+          sensitivity: "public",
+        },
+      ],
       expectedChunkIds: ["x1"],
     },
   ];
@@ -135,9 +179,25 @@ test("a secret in a dropped/forbidden chunk fails the report even when not kept"
       scope: { project: "acme-shop", channel: "#acme-shop" },
       query: "How does Acme Shop checkout work?",
       chunks: [
-        { id: "keep", text: "Acme Shop checkout overview.", project: "acme-shop", channel: "#acme-shop", tags: ["approved", "primary"], sensitivity: "public", score: 0.9 },
+        {
+          id: "keep",
+          text: "Acme Shop checkout overview.",
+          project: "acme-shop",
+          channel: "#acme-shop",
+          tags: ["approved", "primary"],
+          sensitivity: "public",
+          score: 0.9,
+        },
         // Foreign-scope chunk: dropped by assembly, but the secret must still trip the gate.
-        { id: "leaky-foreign", text: `token ${inertToken}`, project: "other-co", channel: "#other-co", tags: ["approved"], sensitivity: "public", score: 5.0 },
+        {
+          id: "leaky-foreign",
+          text: `token ${inertToken}`,
+          project: "other-co",
+          channel: "#other-co",
+          tags: ["approved"],
+          sensitivity: "public",
+          score: 5.0,
+        },
       ],
       expectedChunkIds: ["keep"],
       forbiddenChunkIds: ["leaky-foreign"],
@@ -164,10 +224,27 @@ test("a secret in dropped chunk metadata fails the report even when not kept", (
       scope: { project: "acme-shop", channel: "#acme-shop" },
       query: "How does Acme Shop checkout work?",
       chunks: [
-        { id: "keep", text: "Acme Shop checkout overview.", project: "acme-shop", channel: "#acme-shop", tags: ["approved", "primary"], sensitivity: "public", score: 0.9 },
+        {
+          id: "keep",
+          text: "Acme Shop checkout overview.",
+          project: "acme-shop",
+          channel: "#acme-shop",
+          tags: ["approved", "primary"],
+          sensitivity: "public",
+          score: 0.9,
+        },
         // Foreign-scope chunk dropped by assembly; the secret hides in metadata
         // (tags + workspace), never in chunk.text, yet must still trip the gate.
-        { id: "leaky-meta", text: "nothing secret in this body", project: "other-co", channel: "#other-co", workspace: inertToken, tags: ["approved", `token:${inertToken}`], sensitivity: "public", score: 5.0 },
+        {
+          id: "leaky-meta",
+          text: "nothing secret in this body",
+          project: "other-co",
+          channel: "#other-co",
+          workspace: inertToken,
+          tags: ["approved", `token:${inertToken}`],
+          sensitivity: "public",
+          score: 5.0,
+        },
       ],
       expectedChunkIds: ["keep"],
       forbiddenChunkIds: ["leaky-meta"],
@@ -192,7 +269,16 @@ test("includeCandidates lets an explicitly allowed candidate through", () => {
       scope: { project: "acme-shop", channel: "#acme-shop" },
       query: "candidate allowed",
       includeCandidates: true,
-      chunks: [{ id: "cand", text: "explicitly allowed candidate", project: "acme-shop", channel: "#acme-shop", tags: ["candidate"], sensitivity: "public" }],
+      chunks: [
+        {
+          id: "cand",
+          text: "explicitly allowed candidate",
+          project: "acme-shop",
+          channel: "#acme-shop",
+          tags: ["candidate"],
+          sensitivity: "public",
+        },
+      ],
       expectedChunkIds: ["cand"],
     },
   ];
@@ -219,8 +305,24 @@ test("rollout markdown table includes a per-case Secret Leaks column", () => {
       scope: { project: "acme-shop", channel: "#acme-shop" },
       query: "How does Acme Shop checkout work?",
       chunks: [
-        { id: "keep", text: "Acme Shop checkout overview.", project: "acme-shop", channel: "#acme-shop", tags: ["approved", "primary"], sensitivity: "public", score: 0.9 },
-        { id: "leaky-foreign", text: `token ${inertToken}`, project: "other-co", channel: "#other-co", tags: ["approved"], sensitivity: "public", score: 5.0 },
+        {
+          id: "keep",
+          text: "Acme Shop checkout overview.",
+          project: "acme-shop",
+          channel: "#acme-shop",
+          tags: ["approved", "primary"],
+          sensitivity: "public",
+          score: 0.9,
+        },
+        {
+          id: "leaky-foreign",
+          text: `token ${inertToken}`,
+          project: "other-co",
+          channel: "#other-co",
+          tags: ["approved"],
+          sensitivity: "public",
+          score: 5.0,
+        },
       ],
       expectedChunkIds: ["keep"],
       forbiddenChunkIds: ["leaky-foreign"],

@@ -1,0 +1,7 @@
+# Generated / vendored output is never formatted.
+node_modules/
+dist/
+artifacts/
+coverage/
+package-lock.json
+*.tsbuildinfo

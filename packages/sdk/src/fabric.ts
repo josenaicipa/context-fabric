@@ -3,7 +3,26 @@ import { createHash } from "node:crypto";
 import { Budgeter } from "./budgeter.js";
 import { isCriticalChunk, Router } from "./router.js";
 import { Sanitizer } from "./sanitizer.js";
-import { citationFor, tokenEstimate, type ContextBundle, type ContextChunk, type ContextRequest, type DroppedChunk, type FabricConfig, type Sensitivity } from "./schemas.js";
+import {
+  citationFor,
+  tokenEstimate,
+  type ContextBundle,
+  type ContextChunk,
+  type ContextRequest,
+  type DroppedChunk,
+  type FabricConfig,
+  type Sensitivity,
+  type TokenCounter,
+} from "./schemas.js";
+
+/**
+ * Runtime (non-serializable) options for {@link Fabric}. Kept separate from
+ * {@link FabricConfig} so config stays a plain JSON document.
+ */
+export interface FabricOptions {
+  /** Custom token counter; defaults to the built-in ~4 chars/token heuristic. */
+  tokenCounter?: TokenCounter;
+}
 
 const sensitivityRank: Record<Sensitivity, number> = { public: 0, internal: 1, restricted: 2 };
 
@@ -30,33 +49,52 @@ export class Fabric {
   private readonly router: Router;
   private readonly sanitizer: Sanitizer;
   private readonly config: FabricConfig;
+  private readonly countTokens: TokenCounter;
 
-  constructor(config: FabricConfig = {}) {
+  constructor(config: FabricConfig = {}, options: FabricOptions = {}) {
     this.config = config;
     this.router = new Router(config.routing ?? []);
     this.sanitizer = new Sanitizer(config.sanitization ?? []);
+    this.countTokens = options.tokenCounter ?? tokenEstimate;
   }
 
   private budgetFor(request: ContextRequest): { name: string; budgeter: Budgeter } {
     const profile = request.budgetProfile ?? request.taskType ?? "default";
-    const policy = this.config.budgetProfiles?.[profile] ?? this.config.budgetProfiles?.default ?? this.config.budget ?? { maxTokens: 8000, name: "default" };
-    return { name: policy.name ?? profile, budgeter: new Budgeter(policy) };
+    const policy = this.config.budgetProfiles?.[profile] ??
+      this.config.budgetProfiles?.default ??
+      this.config.budget ?? { maxTokens: 8000, name: "default" };
+    return { name: policy.name ?? profile, budgeter: new Budgeter(policy, this.countTokens) };
   }
 
   assemble(request: ContextRequest, chunks: ContextChunk[]): ContextBundle {
     const routed = this.router.route(request, chunks);
     const routedIds = new Set(routed.map((c) => c.id));
-    const droppedChunks: DroppedChunk[] = chunks.filter((c) => !routedIds.has(c.id)).map((c) => ({ id: c.id, reason: "out_of_scope", tokens: tokenEstimate(c.text) }));
+    const droppedChunks: DroppedChunk[] = chunks
+      .filter((c) => !routedIds.has(c.id))
+      .map((c) => ({ id: c.id, reason: "out_of_scope", tokens: this.countTokens(c.text) }));
     const warnings = [];
     const maxSensitivity = request.maxSensitivity ?? DEFAULT_MAX_SENSITIVITY;
     const allowed = routed.filter((chunk) => {
       if ((chunk.tags ?? []).includes("candidate") && !request.includeCandidates) {
-        droppedChunks.push({ id: chunk.id, reason: "candidate_excluded", tokens: tokenEstimate(chunk.text) });
-        warnings.push({ code: "candidate_excluded", message: `Chunk ${chunk.id} was tagged candidate and excluded by default.` });
+        droppedChunks.push({
+          id: chunk.id,
+          reason: "candidate_excluded",
+          tokens: this.countTokens(chunk.text),
+        });
+        warnings.push({
+          code: "candidate_excluded",
+          message: `Chunk ${chunk.id} was tagged candidate and excluded by default.`,
+        });
         return false;
       }
-      const ok = sensitivityRank[chunk.sensitivity ?? "internal"] <= sensitivityRank[maxSensitivity];
-      if (!ok) droppedChunks.push({ id: chunk.id, reason: "sensitivity_blocked", tokens: tokenEstimate(chunk.text) });
+      const ok =
+        sensitivityRank[chunk.sensitivity ?? "internal"] <= sensitivityRank[maxSensitivity];
+      if (!ok)
+        droppedChunks.push({
+          id: chunk.id,
+          reason: "sensitivity_blocked",
+          tokens: this.countTokens(chunk.text),
+        });
       return ok;
     });
     const seen = new Set<string>();
@@ -64,7 +102,11 @@ export class Fabric {
     for (const chunk of allowed) {
       const fp = fingerprint(chunk.text);
       if (seen.has(fp)) {
-        droppedChunks.push({ id: chunk.id, reason: "duplicate", tokens: tokenEstimate(chunk.text) });
+        droppedChunks.push({
+          id: chunk.id,
+          reason: "duplicate",
+          tokens: this.countTokens(chunk.text),
+        });
         continue;
       }
       seen.add(fp);
@@ -84,12 +126,20 @@ export class Fabric {
     for (const id of dropped) {
       const chunk = sanitizedById.get(id);
       if (chunk && isCriticalChunk(chunk)) criticalBudgetDrops.push(id);
-      droppedChunks.push({ id, reason: "over_budget", tokens: chunk ? tokenEstimate(chunk.text) : undefined });
+      droppedChunks.push({
+        id,
+        reason: "over_budget",
+        tokens: chunk ? this.countTokens(chunk.text) : undefined,
+      });
     }
     if (criticalBudgetDrops.length > 0) {
-      warnings.push({ code: "critical_dropped", message: `Critical chunk(s) dropped by token budget: ${criticalBudgetDrops.join(", ")}` });
+      warnings.push({
+        code: "critical_dropped",
+        message: `Critical chunk(s) dropped by token budget: ${criticalBudgetDrops.join(", ")}`,
+      });
     }
-    if (kept.length === 0) warnings.push({ code: "empty_bundle", message: "The final bundle is empty." });
+    if (kept.length === 0)
+      warnings.push({ code: "empty_bundle", message: "The final bundle is empty." });
     return {
       request,
       chunks: kept,

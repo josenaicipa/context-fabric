@@ -2,7 +2,7 @@
   "name": "context-fabric",
   "version": "1.0.0",
   "private": true,
-  "description": "Context Fabric \u2014 public client SDK, docs, examples, and templates.",
+  "description": "Context Fabric — public client SDK, docs, examples, and templates.",
   "license": "MIT",
   "workspaces": [
     "packages/*"
@@ -10,7 +10,16 @@
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
+    "lint": "eslint .",
+    "format": "prettier --write \"packages/sdk/{src,test}/**/*.ts\" \"scripts/**/*.mjs\" \"templates/**/*.ts\" \"eslint.config.mjs\"",
+    "format:check": "prettier --check \"packages/sdk/{src,test}/**/*.ts\" \"scripts/**/*.mjs\" \"templates/**/*.ts\" \"eslint.config.mjs\"",
     "release:check": "bash scripts/release-check.sh",
     "benchmark": "npm run build && node scripts/benchmark.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "eslint": "^9.39.4",
+    "prettier": "^3.8.4",
+    "typescript-eslint": "^8.61.0"
   }
 }

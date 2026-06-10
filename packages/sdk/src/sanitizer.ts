@@ -59,6 +59,15 @@ function compileRule(rule: SanitizationRule): CompiledRule {
   }
 }
 
+/**
+ * Zero-width / invisible format characters (ZWSP, ZWNJ, ZWJ, word joiner,
+ * BOM). An attacker can splice these inside a token (e.g. a U+200B between
+ * "gh" and "p_") so a prefix-anchored pattern no longer matches while the secret survives a
+ * copy-paste. They carry no visible content, so stripping them before rule
+ * matching is a safe normalization. See docs/SANITIZER_THREAT_MODEL.md.
+ */
+const ZERO_WIDTH_CHARS = /[\u200B-\u200D\u2060\uFEFF]/g;
+
 export class Sanitizer {
   private readonly compiled: CompiledRule[];
 
@@ -68,7 +77,7 @@ export class Sanitizer {
   }
 
   sanitizeText(text: string): { text: string; redactions: number } {
-    let clean = text;
+    let clean = text.replace(ZERO_WIDTH_CHARS, "");
     let redactions = 0;
     for (const { regex, replacement } of this.compiled) {
       const matches = clean.match(regex);
@@ -80,7 +89,9 @@ export class Sanitizer {
 
   sanitizeChunk(chunk: ContextChunk): { chunk: ContextChunk; redactions: number } {
     const { text, redactions } = this.sanitizeText(chunk.text);
-    if (redactions === 0) return { chunk, redactions: 0 };
+    // Text can change with zero redactions (zero-width stripping), so compare
+    // the text itself rather than the redaction count.
+    if (text === chunk.text) return { chunk, redactions };
     return { chunk: { ...chunk, text }, redactions };
   }
 }

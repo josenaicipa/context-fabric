@@ -7,7 +7,7 @@
 # to packages/* via the root package.json scripts.
 
 .DEFAULT_GOAL := help
-.PHONY: help install build test doctor ci clean
+.PHONY: help install build test lint doctor ci clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) \
@@ -23,10 +23,14 @@ build: ## Compile all workspace packages to dist/
 test: ## Build and run the test suites
 	npm test
 
+lint: ## Run ESLint and the Prettier format check
+	npm run lint
+	npm run format:check
+
 doctor: ## Run the public-boundary & hygiene checks
 	bash scripts/doctor.sh
 
-ci: doctor install build test ## Full local CI gate: doctor + install + build + test
+ci: doctor install lint build test ## Full local CI gate: doctor + install + lint + build + test
 
 clean: ## Remove build artifacts
 	npm run clean --workspaces --if-present

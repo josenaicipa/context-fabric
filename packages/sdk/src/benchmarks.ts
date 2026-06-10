@@ -44,33 +44,101 @@ export interface BenchmarkReport {
 }
 
 function paragraph(label: string, repeat = 24): string {
-  return Array.from({ length: repeat }, (_, i) => `${label} operational detail ${i} with generic fictional process notes and non-actionable filler.`).join(" ");
+  return Array.from(
+    { length: repeat },
+    (_, i) =>
+      `${label} operational detail ${i} with generic fictional process notes and non-actionable filler.`,
+  ).join(" ");
 }
 
-function chunk(id: string, text: string, project: string, channel?: string, opts: { tags?: string[]; sensitivity?: Sensitivity; score?: number } = {}): ContextChunk {
-  return { id, text, project, channel, tags: opts.tags ?? [], sensitivity: opts.sensitivity ?? "internal", score: opts.score ?? 0.5 };
+function chunk(
+  id: string,
+  text: string,
+  project: string,
+  channel?: string,
+  opts: { tags?: string[]; sensitivity?: Sensitivity; score?: number } = {},
+): ContextChunk {
+  return {
+    id,
+    text,
+    project,
+    channel,
+    tags: opts.tags ?? [],
+    sensitivity: opts.sensitivity ?? "internal",
+    score: opts.score ?? 0.5,
+  };
 }
 
 function noise(prefix: string, project: string, channel: string, count = 8): ContextChunk[] {
-  return Array.from({ length: count }, (_, i) => chunk(`${prefix}-noise-${i}`, paragraph(`${prefix} noise ${i}`, 28), project, channel, { score: 0.2 }));
+  return Array.from({ length: count }, (_, i) =>
+    chunk(`${prefix}-noise-${i}`, paragraph(`${prefix} noise ${i}`, 28), project, channel, {
+      score: 0.2,
+    }),
+  );
 }
 
-function sameScopeNoise(prefix: string, project: string, channel: string, count = 8): ContextChunk[] {
-  return Array.from({ length: count }, (_, i) => chunk(`${prefix}-same-scope-noise-${i}`, paragraph(`${prefix} same scope noise ${i}`, 30), project, channel, { score: 0.05 }));
+function sameScopeNoise(
+  prefix: string,
+  project: string,
+  channel: string,
+  count = 8,
+): ContextChunk[] {
+  return Array.from({ length: count }, (_, i) =>
+    chunk(
+      `${prefix}-same-scope-noise-${i}`,
+      paragraph(`${prefix} same scope noise ${i}`, 30),
+      project,
+      channel,
+      { score: 0.05 },
+    ),
+  );
 }
 
-function scenario(index: number, name: string, channelName: string, taskType: TaskType, budgetProfile: string, topic: string): BenchmarkCase {
+function scenario(
+  index: number,
+  name: string,
+  channelName: string,
+  taskType: TaskType,
+  budgetProfile: string,
+  topic: string,
+): BenchmarkCase {
   const project = index % 2 === 0 ? "acme-shop" : "demo";
   const otherProject = project === "acme-shop" ? "other-co" : "example";
   const primary = `${name}-primary`;
   const guardrail = `${name}-guardrail`;
   return {
     name,
-    request: { query: `handle ${topic}`, project, channel: channelName, taskType, budgetProfile, maxSensitivity: "internal", maxChunks: 2 },
+    request: {
+      query: `handle ${topic}`,
+      project,
+      channel: channelName,
+      taskType,
+      budgetProfile,
+      maxSensitivity: "internal",
+      maxChunks: 2,
+    },
     chunks: [
-      chunk(primary, `${topic} primary context: exact action, source of truth, and safe response path.`, project, channelName, { tags: [topic, "primary"], score: 0.98 }),
-      chunk(guardrail, `${topic} guardrail: stay read-only, cite evidence, and escalate ambiguity.`, project, channelName, { tags: [topic, "guardrail"], score: 0.95 }),
-      chunk(`${name}-candidate`, "Candidate note excluded unless explicitly requested.", project, channelName, { tags: ["candidate"], score: 0.35 }),
+      chunk(
+        primary,
+        `${topic} primary context: exact action, source of truth, and safe response path.`,
+        project,
+        channelName,
+        { tags: [topic, "primary"], score: 0.98 },
+      ),
+      chunk(
+        guardrail,
+        `${topic} guardrail: stay read-only, cite evidence, and escalate ambiguity.`,
+        project,
+        channelName,
+        { tags: [topic, "guardrail"], score: 0.95 },
+      ),
+      chunk(
+        `${name}-candidate`,
+        "Candidate note excluded unless explicitly requested.",
+        project,
+        channelName,
+        { tags: ["candidate"], score: 0.35 },
+      ),
       ...sameScopeNoise(name, project, channelName, 8),
       ...noise(`${name}-adjacent`, project, "adjacent", 8),
       ...noise(`${name}-foreign`, otherProject, channelName, 8),
@@ -116,7 +184,13 @@ function caseResult(fabric: Fabric, testCase: BenchmarkCase): CaseResult {
   const forbiddenKept = testCase.forbiddenChunkIds.filter((id) => kept.has(id));
   const baselineTokens = testCase.chunks.reduce((sum, c) => sum + tokenEstimate(c.text), 0);
   const sameScopeTokens = testCase.chunks
-    .filter((c) => c.project === testCase.request.project && (testCase.request.channel === undefined || c.channel === undefined || c.channel === testCase.request.channel))
+    .filter(
+      (c) =>
+        c.project === testCase.request.project &&
+        (testCase.request.channel === undefined ||
+          c.channel === undefined ||
+          c.channel === testCase.request.channel),
+    )
     .reduce((sum, c) => sum + tokenEstimate(c.text), 0);
   const keptTokens = bundle.totalTokens;
   return {
@@ -126,8 +200,12 @@ function caseResult(fabric: Fabric, testCase: BenchmarkCase): CaseResult {
     keptTokens,
     tokenReduction: baselineTokens ? 1 - keptTokens / baselineTokens : 0,
     sameScopeTokenReduction: sameScopeTokens ? 1 - keptTokens / sameScopeTokens : 0,
-    recall: testCase.expectedChunkIds.length ? expectedKept.length / testCase.expectedChunkIds.length : 1,
-    contamination: testCase.forbiddenChunkIds.length ? forbiddenKept.length / testCase.forbiddenChunkIds.length : 0,
+    recall: testCase.expectedChunkIds.length
+      ? expectedKept.length / testCase.expectedChunkIds.length
+      : 1,
+    contamination: testCase.forbiddenChunkIds.length
+      ? forbiddenKept.length / testCase.forbiddenChunkIds.length
+      : 0,
     candidateLeaks: bundle.chunks.filter((c) => (c.tags ?? []).includes("candidate")).length,
     secretLeaks: bundle.chunks.filter((c) => hasSecretLikeText(c.text)).length,
     keptChunkIds: keptIds,
@@ -136,7 +214,11 @@ function caseResult(fabric: Fabric, testCase: BenchmarkCase): CaseResult {
   };
 }
 
-export function runPublicBenchmarks(cases = publicBenchmarkCases(), targetTokenReduction = 0.75, fabric = new Fabric()): BenchmarkReport {
+export function runPublicBenchmarks(
+  cases = publicBenchmarkCases(),
+  targetTokenReduction = 0.75,
+  fabric = new Fabric(),
+): BenchmarkReport {
   const caseResults = cases.map((c) => caseResult(fabric, c));
   const reductions = caseResults.map((r) => r.tokenReduction);
   const sameScopeReductions = caseResults.map((r) => r.sameScopeTokenReduction);
@@ -150,8 +232,11 @@ export function runPublicBenchmarks(cases = publicBenchmarkCases(), targetTokenR
   const secretLeaks = caseResults.reduce((sum, r) => sum + r.secretLeaks, 0);
   const medianTokenReduction = median(reductions);
   const medianSameScopeTokenReduction = median(sameScopeReductions);
-  const reliabilityPassed = recall >= 0.9 && contamination === 0 && candidateLeaks === 0 && secretLeaks === 0;
-  const reductionTargetMet = medianTokenReduction >= targetTokenReduction && medianSameScopeTokenReduction >= targetTokenReduction;
+  const reliabilityPassed =
+    recall >= 0.9 && contamination === 0 && candidateLeaks === 0 && secretLeaks === 0;
+  const reductionTargetMet =
+    medianTokenReduction >= targetTokenReduction &&
+    medianSameScopeTokenReduction >= targetTokenReduction;
   return {
     cases: caseResults.length,
     targetTokenReduction,
@@ -198,7 +283,9 @@ export function benchmarkReportToMarkdown(report: BenchmarkReport): string {
     "|---|---:|---:|---:|---:|---:|---:|",
   ];
   for (const result of report.caseResults) {
-    lines.push(`| ${result.name} | ${result.baselineTokens} | ${result.keptTokens} | ${pct(result.tokenReduction)} | ${pct(result.sameScopeTokenReduction)} | ${pct(result.recall)} | ${pct(result.contamination)} |`);
+    lines.push(
+      `| ${result.name} | ${result.baselineTokens} | ${result.keptTokens} | ${pct(result.tokenReduction)} | ${pct(result.sameScopeTokenReduction)} | ${pct(result.recall)} | ${pct(result.contamination)} |`,
+    );
   }
   return `${lines.join("\n")}\n`;
 }

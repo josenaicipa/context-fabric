@@ -10,10 +10,13 @@ export function buildPack(input: {
   budgetProfile?: string;
   sensitivity?: Sensitivity;
 }): ContextPack {
-  const chunks = input.chunks.filter((chunk) =>
-    (input.workspace === undefined || chunk.workspace === undefined || chunk.workspace === input.workspace) &&
-    (input.project === undefined || chunk.project === input.project) &&
-    (input.channel === undefined || chunk.channel === input.channel),
+  const chunks = input.chunks.filter(
+    (chunk) =>
+      (input.workspace === undefined ||
+        chunk.workspace === undefined ||
+        chunk.workspace === input.workspace) &&
+      (input.project === undefined || chunk.project === input.project) &&
+      (input.channel === undefined || chunk.channel === input.channel),
   );
   const seen = new Set<string>();
   const sources = chunks.map(citationFor).filter((source) => {

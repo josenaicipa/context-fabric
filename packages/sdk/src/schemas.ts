@@ -2,7 +2,14 @@
 
 export type Sensitivity = "public" | "internal" | "restricted";
 export type TaskType = "general" | "code" | "research" | "qa" | "summarize" | "agent_handoff";
-export type DropReason = "out_of_scope" | "required_tags" | "candidate_excluded" | "duplicate" | "sensitivity_blocked" | "per_chunk_cap" | "over_budget";
+export type DropReason =
+  | "out_of_scope"
+  | "required_tags"
+  | "candidate_excluded"
+  | "duplicate"
+  | "sensitivity_blocked"
+  | "per_chunk_cap"
+  | "over_budget";
 
 export interface Citation {
   sourceId: string;
@@ -101,6 +108,14 @@ export interface FabricConfig {
   budgetProfiles?: Record<string, BudgetPolicy>;
   sanitization?: SanitizationRule[];
 }
+
+/**
+ * Pluggable token counter. The SDK ships with the {@link tokenEstimate}
+ * heuristic (~4 chars/token); callers can supply a model-accurate counter
+ * (e.g. a tiktoken wrapper) via `FabricOptions`/`Budgeter` without the SDK
+ * taking on a tokenizer dependency.
+ */
+export type TokenCounter = (text: string) => number;
 
 export function tokenEstimate(text: string): number {
   return Math.max(1, Math.floor(text.length / 4));

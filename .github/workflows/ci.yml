@@ -22,13 +22,32 @@ jobs:
       - name: Run boundary & hygiene checks
         run: bash scripts/doctor.sh
 
-  build-test:
-    name: Build & test (Node ${{ matrix.node }})
+  lint:
+    name: Lint & format
     runs-on: ubuntu-latest
+    needs: doctor
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Format check
+        run: npm run format:check
+
+  build-test:
+    name: Build & test (Node ${{ matrix.node }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     needs: doctor
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest, macos-latest]
         node: ['20', '22']
     steps:
       - uses: actions/checkout@v4
@@ -41,9 +60,24 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run build
+      # The suite includes the pack -> install -> installed-bin smoke test,
+      # so this exercises the CLI/bin wiring on every OS in the matrix.
       - name: Test
         run: npm test
 
+  release-check:
+    name: Release gate (pack → install → bin smoke)
+    runs-on: ubuntu-latest
+    needs: [lint, build-test]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Run full release gate
+        run: npm run release:check
 
   benchmark:
     name: Public benchmark artifact

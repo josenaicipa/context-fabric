@@ -66,7 +66,8 @@ export const SECRET_PATTERN_DEFS: ReadonlyArray<SecretPatternDef> = [
     name: "generic_secret_assignment",
     // Detection requires quotes + a known key name (high confidence for policy
     // scans); redaction also catches unquoted `api_key = value` assignments.
-    detect: "(?:password|api[_-]?key|access[_-]?token|client[_-]?secret)[\"']?\\s*[:=]\\s*[\"'][^\"'\\s]{12,}",
+    detect:
+      "(?:password|api[_-]?key|access[_-]?token|client[_-]?secret)[\"']?\\s*[:=]\\s*[\"'][^\"'\\s]{12,}",
     redact: "(api[_-]?key|secret|token|password)\\s*[:=]\\s*['\"]?[^\\s'\"]{6,}",
     replacement: "$1=[REDACTED]",
   },
@@ -85,8 +86,10 @@ export function secretDetectionPatterns(): RegExp[] {
  * Redaction rules (no email/PII — those live in the sanitizer's own baseline).
  * Returned as plain {@link SanitizationRule} so they compose with user rules.
  */
-export const SECRET_SANITIZATION_RULES: ReadonlyArray<SanitizationRule> = SECRET_PATTERN_DEFS.map((def) => ({
-  name: def.name,
-  pattern: def.redact ?? def.detect,
-  replacement: def.replacement,
-}));
+export const SECRET_SANITIZATION_RULES: ReadonlyArray<SanitizationRule> = SECRET_PATTERN_DEFS.map(
+  (def) => ({
+    name: def.name,
+    pattern: def.redact ?? def.detect,
+    replacement: def.replacement,
+  }),
+);

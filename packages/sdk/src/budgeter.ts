@@ -4,7 +4,12 @@
  * Trims a ranked list of chunks so the bundle fits within a BudgetPolicy.
  * Chunks are consumed in rank order, so the most relevant context survives.
  */
-import { tokenEstimate, type BudgetPolicy, type ContextChunk } from "./schemas.js";
+import {
+  tokenEstimate,
+  type BudgetPolicy,
+  type ContextChunk,
+  type TokenCounter,
+} from "./schemas.js";
 
 export interface BudgetResult {
   kept: ContextChunk[];
@@ -14,9 +19,14 @@ export interface BudgetResult {
 
 export class Budgeter {
   private readonly policy: BudgetPolicy;
+  private readonly countTokens: TokenCounter;
 
-  constructor(policy: BudgetPolicy = { maxTokens: 8000 }) {
+  constructor(
+    policy: BudgetPolicy = { maxTokens: 8000 },
+    tokenCounter: TokenCounter = tokenEstimate,
+  ) {
     this.policy = policy;
+    this.countTokens = tokenCounter;
   }
 
   private available(): number {
@@ -32,7 +42,7 @@ export class Budgeter {
     let total = 0;
 
     for (const chunk of chunks) {
-      const cost = tokenEstimate(chunk.text);
+      const cost = this.countTokens(chunk.text);
       if (perChunkCap !== undefined && cost > perChunkCap) {
         dropped.push(chunk.id);
         continue;

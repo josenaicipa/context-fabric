@@ -20,7 +20,10 @@ test("route excludes other projects", () => {
     chunk({ id: "b", project: "other", channel: "#other", score: 99 }),
   ];
   const routed = new Router().route(req(), chunks);
-  assert.deepEqual(routed.map((c) => c.id), ["a"]);
+  assert.deepEqual(
+    routed.map((c) => c.id),
+    ["a"],
+  );
 });
 
 test("channel match outranks project-only", () => {
@@ -64,5 +67,8 @@ test("must_keep chunks are not lost to maxChunks", () => {
     chunk({ id: "critical", project: "acme", channel: "#acme", tags: ["must_keep"], score: 0 }),
   ];
   const routed = new Router().route(req({ maxChunks: 1 }), chunks);
-  assert.deepEqual(routed.map((c) => c.id), ["critical"]);
+  assert.deepEqual(
+    routed.map((c) => c.id),
+    ["critical"],
+  );
 });

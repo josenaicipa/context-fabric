@@ -3,6 +3,20 @@
   "version": "1.0.0",
   "description": "Public client SDK for Context Fabric: scope-aware, sanitized, budget-aware LLM context assembly. Zero runtime dependencies.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/josenaicipa/context-fabric.git",
+    "directory": "packages/sdk"
+  },
+  "homepage": "https://github.com/josenaicipa/context-fabric#readme",
+  "bugs": {
+    "url": "https://github.com/josenaicipa/context-fabric/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "sideEffects": false,
   "type": "module",
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
@@ -21,7 +35,7 @@
     "LICENSE"
   ],
   "engines": {
-    "node": ">=20"
+    "node": ">=20.3.0"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

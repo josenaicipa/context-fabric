@@ -37,9 +37,5 @@ export async function buildContext(query: string): Promise<string> {
     console.warn(`Dropped ${bundle.droppedChunkIds.length} chunk(s) to fit budget.`);
   }
 
-  return [
-    "Use only the context below to answer.",
-    "",
-    bundleToText(bundle),
-  ].join("\n");
+  return ["Use only the context below to answer.", "", bundleToText(bundle)].join("\n");
 }

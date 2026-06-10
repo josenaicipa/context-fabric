@@ -130,23 +130,40 @@ export interface ValidateRolloutPolicyOptions {
 }
 
 /** Validate a rollout policy is public-safe: allowlisted scopes only, no secrets, well-formed. */
-export function validateRolloutPolicy(policy: RolloutPolicy, opts: ValidateRolloutPolicyOptions = {}): RolloutValidation {
+export function validateRolloutPolicy(
+  policy: RolloutPolicy,
+  opts: ValidateRolloutPolicyOptions = {},
+): RolloutValidation {
   const allowlist = opts.scopeAllowlist ?? DEFAULT_SCOPE_ALLOWLIST;
   const findings: RolloutFinding[] = [];
 
   if (!Array.isArray(policy.routes) || policy.routes.length === 0) {
-    findings.push({ code: "no_routes", severity: "blocker", message: "Policy must declare at least one route." });
+    findings.push({
+      code: "no_routes",
+      severity: "blocker",
+      message: "Policy must declare at least one route.",
+    });
   }
 
   (policy.routes ?? []).forEach((route, index) => {
     const where = `routes[${index}]`;
     if (!route.scope || !route.scope.project) {
-      findings.push({ code: "missing_scope", severity: "blocker", message: "Route is missing scope.project.", where });
+      findings.push({
+        code: "missing_scope",
+        severity: "blocker",
+        message: "Route is missing scope.project.",
+        where,
+      });
       return;
     }
     for (const value of scopeValues(route)) {
       if (!isAllowedScope(value, allowlist)) {
-        findings.push({ code: "non_allowlisted_scope", severity: "blocker", message: `Scope '${value}' is not in the fictional allowlist (${allowlist.join(", ")}).`, where });
+        findings.push({
+          code: "non_allowlisted_scope",
+          severity: "blocker",
+          message: `Scope '${value}' is not in the fictional allowlist (${allowlist.join(", ")}).`,
+          where,
+        });
       }
     }
   });
@@ -154,7 +171,11 @@ export function validateRolloutPolicy(policy: RolloutPolicy, opts: ValidateRollo
   const serialized = JSON.stringify(policy);
   for (const pattern of SECRET_PATTERNS) {
     if (pattern.test(serialized)) {
-      findings.push({ code: "secret_material", severity: "blocker", message: `Policy contains secret-like material matching /${pattern.source}/.` });
+      findings.push({
+        code: "secret_material",
+        severity: "blocker",
+        message: `Policy contains secret-like material matching /${pattern.source}/.`,
+      });
     }
   }
 
@@ -169,14 +190,21 @@ function findRoute(policy: RolloutPolicy, scope: RolloutScope): RolloutRoute | u
   });
 }
 
-function requestFor(policy: RolloutPolicy, smoke: RolloutSmokeCase, route: RolloutRoute | undefined): ContextRequest {
+function requestFor(
+  policy: RolloutPolicy,
+  smoke: RolloutSmokeCase,
+  route: RolloutRoute | undefined,
+): ContextRequest {
   return {
     query: smoke.query,
     project: smoke.scope.project,
     channel: smoke.scope.channel,
     workspace: smoke.scope.workspace,
-    budgetProfile: smoke.budgetProfile ?? route?.budgetProfile ?? policy.defaults?.budgetProfile ?? "handoff",
-    maxSensitivity: smoke.maxSensitivity ?? route?.maxSensitivity ?? "internal",
+    budgetProfile:
+      smoke.budgetProfile ?? route?.budgetProfile ?? policy.defaults?.budgetProfile ?? "handoff",
+    // Fail closed like every other entrypoint: a case/route that does not
+    // explicitly widen the ceiling only sees `public` chunks.
+    maxSensitivity: smoke.maxSensitivity ?? route?.maxSensitivity ?? "public",
     includeCandidates: smoke.includeCandidates,
   };
 }
@@ -197,10 +225,16 @@ function scannableChunkStrings(chunk: ContextChunk): string[] {
 function hasSecret(chunk: ContextChunk): boolean {
   // Scan the whole chunk, not just its body: secrets can hide in the id, tags, or
   // project/channel/workspace metadata of a chunk that assembly would otherwise drop.
-  return scannableChunkStrings(chunk).some((value) => SECRET_PATTERNS.some((pattern) => pattern.test(value)));
+  return scannableChunkStrings(chunk).some((value) =>
+    SECRET_PATTERNS.some((pattern) => pattern.test(value)),
+  );
 }
 
-function smokeCase(fabric: Fabric, policy: RolloutPolicy, smoke: RolloutSmokeCase): RolloutCaseResult {
+function smokeCase(
+  fabric: Fabric,
+  policy: RolloutPolicy,
+  smoke: RolloutSmokeCase,
+): RolloutCaseResult {
   const route = findRoute(policy, smoke.scope);
   const bundle = fabric.assemble(requestFor(policy, smoke, route), smoke.chunks);
   const kept = new Set(bundle.chunks.map((c) => c.id));
@@ -214,7 +248,12 @@ function smokeCase(fabric: Fabric, policy: RolloutPolicy, smoke: RolloutSmokeCas
   // id/tags/scope metadata — is still something we must never ship, so it has to
   // fail the report even when routing/budget would have excluded the chunk.
   const secretLeaks = smoke.chunks.filter(hasSecret).length;
-  const passed = Boolean(route) && expectedMissing.length === 0 && forbiddenPresent.length === 0 && candidateLeaks === 0 && secretLeaks === 0;
+  const passed =
+    Boolean(route) &&
+    expectedMissing.length === 0 &&
+    forbiddenPresent.length === 0 &&
+    candidateLeaks === 0 &&
+    secretLeaks === 0;
   return {
     name: smoke.name,
     routeMatched: Boolean(route),
@@ -234,7 +273,11 @@ export interface RunRolloutSmokeOptions {
 }
 
 /** Validate a policy and run the local assemble smoke across the provided cases. */
-export function runRolloutSmoke(policy: RolloutPolicy, cases: RolloutSmokeCase[], opts: RunRolloutSmokeOptions = {}): RolloutReport {
+export function runRolloutSmoke(
+  policy: RolloutPolicy,
+  cases: RolloutSmokeCase[],
+  opts: RunRolloutSmokeOptions = {},
+): RolloutReport {
   const validation = validateRolloutPolicy(policy, { scopeAllowlist: opts.scopeAllowlist });
   const fabric = opts.fabric ?? new Fabric();
   const caseResults = cases.map((smoke) => smokeCase(fabric, policy, smoke));
@@ -249,7 +292,12 @@ export function runRolloutSmoke(policy: RolloutPolicy, cases: RolloutSmokeCase[]
 
   const recall = expectedTotal ? expectedKept / expectedTotal : 1;
   const contamination = forbiddenTotal ? forbiddenKept / forbiddenTotal : 0;
-  const reliabilityPassed = recall >= 0.9 && contamination === 0 && candidateLeaks === 0 && secretLeaks === 0 && unroutedCases === 0;
+  const reliabilityPassed =
+    recall >= 0.9 &&
+    contamination === 0 &&
+    candidateLeaks === 0 &&
+    secretLeaks === 0 &&
+    unroutedCases === 0;
 
   return {
     validation,
@@ -287,7 +335,9 @@ export function rolloutReportToMarkdown(report: RolloutReport): string {
   if (report.validation.findings.length > 0) {
     lines.push("## Policy findings", "");
     for (const finding of report.validation.findings) {
-      lines.push(`- [${finding.severity}] ${finding.code}: ${finding.message}${finding.where ? ` (${finding.where})` : ""}`);
+      lines.push(
+        `- [${finding.severity}] ${finding.code}: ${finding.message}${finding.where ? ` (${finding.where})` : ""}`,
+      );
     }
     lines.push("");
   }

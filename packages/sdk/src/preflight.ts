@@ -2,7 +2,13 @@ import { Fabric } from "./fabric.js";
 import { renderAgentContext } from "./handoff.js";
 import { memoryRecordsToChunks, type MemoryRecord } from "./memory.js";
 import { buildPack } from "./packs.js";
-import type { ContextChunk, ContextPack, ContextRequest, Sensitivity, TaskType } from "./schemas.js";
+import type {
+  ContextChunk,
+  ContextPack,
+  ContextRequest,
+  Sensitivity,
+  TaskType,
+} from "./schemas.js";
 
 export interface ChannelScope {
   project: string;
@@ -29,6 +35,13 @@ export interface PreflightResult {
   agentContext: string;
 }
 
+/**
+ * Fail-closed default: a scope that does not explicitly opt in to a wider
+ * ceiling only receives `public` chunks. Matches the Fabric/auditBundle/CLI
+ * default so every entrypoint fails closed the same way.
+ */
+const DEFAULT_PREFLIGHT_SENSITIVITY: Sensitivity = "public";
+
 export function runPreflight(input: PreflightInput, fabric = new Fabric()): PreflightResult {
   const request: ContextRequest = {
     query: input.message,
@@ -37,7 +50,7 @@ export function runPreflight(input: PreflightInput, fabric = new Fabric()): Pref
     channel: input.scope.channel,
     taskType: input.scope.taskType ?? "agent_handoff",
     budgetProfile: input.scope.budgetProfile ?? "handoff",
-    maxSensitivity: input.scope.maxSensitivity ?? "internal",
+    maxSensitivity: input.scope.maxSensitivity ?? DEFAULT_PREFLIGHT_SENSITIVITY,
     maxChunks: input.maxChunks,
     includeCandidates: input.includeCandidates,
   };
@@ -51,7 +64,16 @@ export function runPreflight(input: PreflightInput, fabric = new Fabric()): Pref
   return {
     request,
     chunks: bundle.chunks,
-    pack: buildPack({ id: `${input.scope.project}-preflight`, summary: `Preflight context for ${input.scope.project}`, chunks: bundle.chunks, project: input.scope.project, channel: input.scope.channel, workspace: input.scope.workspace, sensitivity: input.scope.maxSensitivity ?? "internal", budgetProfile: bundle.budgetProfile }),
+    pack: buildPack({
+      id: `${input.scope.project}-preflight`,
+      summary: `Preflight context for ${input.scope.project}`,
+      chunks: bundle.chunks,
+      project: input.scope.project,
+      channel: input.scope.channel,
+      workspace: input.scope.workspace,
+      sensitivity: input.scope.maxSensitivity ?? DEFAULT_PREFLIGHT_SENSITIVITY,
+      budgetProfile: bundle.budgetProfile,
+    }),
     agentContext: renderAgentContext(bundle),
   };
 }
