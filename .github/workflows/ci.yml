@@ -18,7 +18,7 @@ jobs:
     name: Boundary doctor
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Run boundary & hygiene checks
         run: bash scripts/doctor.sh
 
@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: doctor
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -50,7 +50,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
         node: ['20', '22']
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
@@ -70,7 +70,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint, build-test]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -84,7 +84,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: doctor
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
