@@ -57,12 +57,16 @@ function loadJson<T>(path: string, what: string): T {
   try {
     raw = readFileSync(path, "utf-8");
   } catch (err) {
-    throw new Error(`cannot read ${what} file '${path}': ${(err as Error).message}`);
+    throw new Error(`cannot read ${what} file '${path}': ${(err as Error).message}`, {
+      cause: err,
+    });
   }
   try {
     return JSON.parse(raw) as T;
   } catch (err) {
-    throw new Error(`malformed JSON in ${what} file '${path}': ${(err as Error).message}`);
+    throw new Error(`malformed JSON in ${what} file '${path}': ${(err as Error).message}`, {
+      cause: err,
+    });
   }
 }
 function loadConfig(args: Args): FabricConfig {
