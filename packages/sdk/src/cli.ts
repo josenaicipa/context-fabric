@@ -2,10 +2,18 @@
 /** context-fabric CLI (public SDK). */
 import { readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
+import { ConfigError, validateConfig } from "./config.js";
+import {
+  emptyDiagnostic,
+  emptyDiagnosticToText,
+  explainRoute,
+  routeReportToMarkdown,
+} from "./diagnostics.js";
+import { evalReportToMarkdown, runEvals } from "./evals.js";
 import { Fabric } from "./fabric.js";
-import { buildPack } from "./packs.js";
 import { renderAgentContext } from "./handoff.js";
-import { runEvals } from "./evals.js";
+import { isolationScorecardToMarkdown, runIsolationScorecard } from "./isolation.js";
+import { buildPack } from "./packs.js";
 import {
   runRolloutSmoke,
   rolloutReportToMarkdown,
@@ -13,7 +21,13 @@ import {
   type RolloutSmokeCase,
 } from "./rollout.js";
 import { VERSION } from "./index.js";
-import type { ContextChunk, FabricConfig, Sensitivity, TaskType } from "./schemas.js";
+import {
+  bundleToText,
+  type ContextChunk,
+  type FabricConfig,
+  type Sensitivity,
+  type TaskType,
+} from "./schemas.js";
 
 interface Args {
   [key: string]: string | undefined;
@@ -66,7 +80,13 @@ function loadJson<T>(path: string, what: string): T {
   }
 }
 function loadConfig(args: Args): FabricConfig {
-  return args.config ? loadJson<FabricConfig>(args.config, "--config") : {};
+  if (!args.config) return {};
+  try {
+    return validateConfig(loadJson<unknown>(args.config, "--config"));
+  } catch (err) {
+    if (err instanceof ConfigError) throw new Error(`invalid --config: ${err.message}`);
+    throw err;
+  }
 }
 function loadChunks(args: Args): ContextChunk[] {
   if (!args.chunks) throw new Error("--chunks is required");
@@ -126,6 +146,7 @@ function requestFrom(args: Args) {
     workspace: args.workspace,
     tags: parseTags(args.tags),
     maxChunks: parseMaxChunks(args.maxChunks),
+    threadId: args.threadId,
     taskType: parseChoice(args.taskType, "--taskType", TASK_TYPES),
     budgetProfile: args.budgetProfile,
     maxSensitivity: parseChoice(args.maxSensitivity, "--maxSensitivity", SENSITIVITIES),
@@ -138,21 +159,25 @@ const USAGE = `context-fabric ${VERSION}
 Usage: context-fabric <command> [options]
 
 Commands:
-  assemble   Route, sanitize, and budget chunks into a context bundle
-  pack       Build a portable context pack from chunks
-  doctor     Report effective config (version, routing rules)
-  eval       Score a single assemble case (expected/forbidden chunks)
-  rollout    Validate a rollout policy and run the local assemble smoke
+  assemble         Route, sanitize, and budget chunks into a context bundle
+  pack             Build a portable context pack from chunks
+  doctor           Report effective config (version, routing rules)
+  eval             Score a single assemble case (expected/forbidden chunks)
+  rollout          Validate a rollout policy and run the local assemble smoke
+  validate-config  Fail-fast validation of a FabricConfig JSON file
+  diagnose         Explain why each chunk was kept or dropped by the router
+  isolation        Run the public cross-project / thread isolation scorecard
 
 Global flags:
   --help, -h       Show this help and exit
   --version, -v    Print the SDK version and exit
 
 Common options:
-  --query <q>              Request query (assemble/eval)
-  --project <p>            Scope project (required for assemble/eval)
+  --query <q>              Request query (assemble/eval/diagnose)
+  --project <p>            Scope project (required for assemble/eval/diagnose)
   --channel <c>            Scope channel
   --workspace <w>          Scope workspace
+  --threadId <id>          Thread focus nested under channel
   --tags <a,b,c>           Comma-separated request tags (boost tag overlap)
   --maxChunks <n>          Cap on routed chunks
   --taskType <t>           Task type hint
@@ -161,14 +186,20 @@ Common options:
   --includeCandidates      Allow candidate-tagged chunks through
   --chunks <path>          JSON file of ContextChunk[]
   --config <path>          JSON FabricConfig
-  --format <fmt>           assemble: agent-context; rollout: markdown
+  --format <fmt>           assemble: json | text | agent-context
+                           eval/diagnose/isolation/rollout: json | markdown
 `;
 
 function cmdAssemble(args: Args): number {
   const chunks = loadChunks(args);
   const bundle = new Fabric(loadConfig(args)).assemble(requestFrom(args), chunks);
   if (args.format === "agent-context") process.stdout.write(renderAgentContext(bundle));
-  else process.stdout.write(JSON.stringify(bundle, null, 2) + "\n");
+  else if (args.format === "text") {
+    const diagnostic = emptyDiagnostic(bundle);
+    process.stdout.write(
+      diagnostic ? emptyDiagnosticToText(diagnostic) : bundleToText(bundle) + "\n",
+    );
+  } else process.stdout.write(JSON.stringify(bundle, null, 2) + "\n");
   return 0;
 }
 
@@ -183,6 +214,7 @@ function cmdPack(args: Args): number {
     workspace: args.workspace,
     project: args.project,
     channel: args.channel,
+    threadId: args.threadId,
     budgetProfile: args.budgetProfile,
     sensitivity: parseChoice(args.sensitivity, "--sensitivity", SENSITIVITIES),
   });
@@ -209,8 +241,41 @@ function cmdEval(args: Args): number {
       forbiddenChunkIds: args.forbid ? [args.forbid] : [],
     },
   ]);
-  process.stdout.write(JSON.stringify(report, null, 2) + "\n");
+  process.stdout.write(
+    args.format === "markdown"
+      ? evalReportToMarkdown(report)
+      : JSON.stringify(report, null, 2) + "\n",
+  );
   return report.passed ? 0 : 2;
+}
+
+function cmdValidateConfig(args: Args): number {
+  if (!args.config) throw new Error("--config is required");
+  const config = loadConfig(args);
+  process.stdout.write(
+    `OK: valid config version=${config.version ?? 1} routing=${config.routing?.length ?? 0} sanitization=${config.sanitization?.length ?? 0}\n`,
+  );
+  return 0;
+}
+
+function cmdDiagnose(args: Args): number {
+  const report = explainRoute(requestFrom(args), loadChunks(args), loadConfig(args));
+  process.stdout.write(
+    args.format === "markdown"
+      ? routeReportToMarkdown(report)
+      : JSON.stringify(report, null, 2) + "\n",
+  );
+  return 0;
+}
+
+function cmdIsolation(args: Args): number {
+  const scorecard = runIsolationScorecard();
+  process.stdout.write(
+    args.format === "markdown"
+      ? isolationScorecardToMarkdown(scorecard)
+      : JSON.stringify(scorecard, null, 2) + "\n",
+  );
+  return scorecard.passed ? 0 : 2;
 }
 
 function cmdRollout(args: Args): number {
@@ -252,6 +317,12 @@ export function main(argv: string[]): number {
         return cmdEval(args);
       case "rollout":
         return cmdRollout(args);
+      case "validate-config":
+        return cmdValidateConfig(args);
+      case "diagnose":
+        return cmdDiagnose(args);
+      case "isolation":
+        return cmdIsolation(args);
       default:
         process.stderr.write(USAGE);
         return command ? 1 : 0;

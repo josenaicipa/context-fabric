@@ -87,6 +87,53 @@ test("fail-closed: default assemble keeps only public chunks and passes default 
   assert.equal(audit.passed, true, JSON.stringify(audit.findings));
 });
 
+test("per-chunk token cap is recorded as per_chunk_cap not over_budget", () => {
+  const chunks: ContextChunk[] = [
+    {
+      id: "tiny",
+      text: "ok",
+      project: "acme",
+      channel: "#acme",
+      sensitivity: "public",
+      score: 1,
+    },
+    {
+      id: "huge",
+      text: "x".repeat(4000),
+      project: "acme",
+      channel: "#acme",
+      sensitivity: "public",
+      score: 2,
+    },
+  ];
+  const bundle = new Fabric({ budget: { maxTokens: 8000, perChunkMaxTokens: 10 } }).assemble(
+    { query: "q", project: "acme", channel: "#acme" },
+    chunks,
+  );
+  const reasons = new Map(bundle.droppedChunks.map((d) => [d.id, d.reason]));
+  assert.equal(reasons.get("huge"), "per_chunk_cap");
+  assert.deepEqual(
+    bundle.chunks.map((c) => c.id),
+    ["tiny"],
+  );
+});
+
+test("assemble records redactionEvents for email PII", () => {
+  const bundle = new Fabric().assemble({ query: "checkout", project: "acme", channel: "#acme" }, [
+    {
+      id: "p",
+      text: "Contact billing@example.com",
+      project: "acme",
+      channel: "#acme",
+      sensitivity: "public",
+      score: 1,
+    },
+  ]);
+  assert.ok(bundle.redactions >= 1);
+  assert.ok(bundle.redactionEvents.some((e) => e.rule === "email" && e.count >= 1));
+  assert.ok(!bundleToText(bundle).includes("billing@example.com"));
+});
+
 test("unmarked chunks are treated as internal and excluded by the default ceiling", () => {
   const chunks: ContextChunk[] = [
     {

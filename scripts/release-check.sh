@@ -63,6 +63,11 @@ BIN="$APP_DIR/node_modules/.bin/context-fabric"
 "$BIN" --version | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+' || die "installed bin --version output unexpected"
 "$BIN" --help | grep -q 'Usage: context-fabric <command>' || die "installed bin --help output unexpected"
 "$BIN" doctor | grep -q '^OK: config version=' || die "installed bin doctor output unexpected"
+"$BIN" isolation --format markdown | grep -q 'PASS' || die "installed bin isolation scorecard did not PASS"
+cat > "$APP_DIR/config.json" <<'JSON'
+{ "version": 1, "routing": [{ "project": "acme-shop", "boost": 1 }], "budget": { "maxTokens": 2000 } }
+JSON
+"$BIN" validate-config --config "$APP_DIR/config.json" | grep -q '^OK: valid config' || die "installed bin validate-config output unexpected"
 
 # Assemble smoke from the installed bin: the fail-closed default ceiling must
 # admit only the public chunk.

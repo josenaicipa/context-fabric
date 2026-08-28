@@ -10,6 +10,44 @@ minor versions may carry breaking changes; they are called out below.
 
 _No unreleased changes._
 
+## [1.1.0] — 2026-08-27
+
+### Added
+
+- Fail-fast `validateConfig` / `ConfigError` and CLI `validate-config`. Unknown
+  keys, wrong types, and patterns that will not compile as regular expressions
+  are rejected with a dotted path instead of failing mid-assemble.
+- Routing diagnostics: `Router.inspect`, `explainRoute`, CLI `diagnose`. Each
+  chunk is labelled with a public reason (scope, thread, required tags,
+  `maxChunks`).
+- Thread scoping (`threadId` on request, chunk, routing rule, pack, memory
+  record, and preflight). Thread-private chunks never enter a sibling thread or
+  an unfocused request; unstamped chunks remain as thread-wide fallback.
+- Workspace hard-exclusion when both the request and the chunk name a
+  workspace and they differ (closes the v1 spec gap that named workspace as a
+  scope dimension).
+- Public isolation scorecard (`runIsolationScorecard`, CLI `isolation`) over
+  fictional `acme-shop` / `other-co` cases: cross-project, sibling-thread,
+  unfocused-request, thread-wide fallback, sensitivity ceiling, workspace.
+- Empty-bundle diagnostics (`emptyDiagnostic`) and CLI `assemble --format text`.
+- Expanded baseline sanitizer: JWT, Anthropic `sk-ant-`, OpenAI-shaped
+  `sk-proj-`/`sk-svcacct-`/`sk-admin-`, Stripe test/restricted/webhook keys,
+  GitHub `gho_`/`ghu_`/`ghs_`/`ghr_`, npm tokens, labelled AWS secret
+  assignments, labelled phone and conservative E.164 PII. NFKC + control-char
+  stripping before scan. Per-rule `redactionEvents` on the bundle.
+- Eval markdown (`evalReportToMarkdown`, CLI `eval --format markdown`).
+- Agent-tool and chat-messages integration templates.
+- CI test-coverage job (`npm run test:coverage`).
+
+### Changed
+
+- Budgeter records `per_chunk_cap` separately from `over_budget` on
+  `droppedChunks`.
+- `Fabric` validates config at construction time.
+- Policy audit flags cross-workspace and cross-thread leaks.
+- Doctor secret scan covers additional high-confidence families and excludes
+  `secret-patterns.ts` (pattern source, like the sanitizer).
+
 ## [1.0.0] — 2026-06-10
 
 ### Added
@@ -76,5 +114,6 @@ _No unreleased changes._
   boundary.
 
 [Unreleased]: https://keepachangelog.com/en/1.1.0/
+[1.1.0]: https://keepachangelog.com/en/1.1.0/
 [1.0.0]: https://keepachangelog.com/en/1.1.0/
 [0.1.0]: https://keepachangelog.com/en/1.1.0/

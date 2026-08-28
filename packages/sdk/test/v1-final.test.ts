@@ -12,7 +12,7 @@ import {
 
 test("v1 readiness contract is true", () => {
   const ready = v1Readiness();
-  assert.equal(VERSION, "1.0.0");
+  assert.equal(VERSION, "1.1.0");
   assert.equal(ready.ready, true);
   assert.ok(ready.gates.includes("opus-audit"));
 });
@@ -58,6 +58,7 @@ test("policy and repo pack helpers are public-safe", () => {
     droppedChunks: [],
     warnings: [],
     budgetProfile: "code-change",
+    redactionEvents: [],
   });
   assert.equal(audit.passed, true);
 });
@@ -73,6 +74,7 @@ test("policy defaults fail closed on internal chunks", () => {
     droppedChunks: [],
     warnings: [],
     budgetProfile: "quick-answer",
+    redactionEvents: [],
   });
   assert.equal(audit.passed, false);
   assert.equal(audit.findings[0].code, "sensitivity_ceiling");

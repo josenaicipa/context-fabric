@@ -102,3 +102,32 @@ test("CLI doctor, agent-context, pack and eval commands work", () => {
   );
   assert.equal(fail.status, 2);
 });
+
+test("CLI eval --format markdown prints a scorecard", () => {
+  const out = execFileSync(
+    process.execPath,
+    [
+      cli,
+      "eval",
+      "--query",
+      "support",
+      "--project",
+      "acme-shop",
+      "--channel",
+      "#acme-shop",
+      "--chunks",
+      chunks,
+      "--config",
+      config,
+      "--expect",
+      "c2",
+      "--forbid",
+      "c3",
+      "--format",
+      "markdown",
+    ],
+    { encoding: "utf8" },
+  );
+  assert.match(out, /Eval PASS/);
+  assert.match(out, /Recall:/);
+});

@@ -33,6 +33,8 @@ are optional; sensible defaults apply.
 | --- | --- | --- | --- |
 | `project` | string | — | Required. Rule applies only to chunks in this project. |
 | `channel` | string? | any | If set, rule applies only to matching-channel chunks. |
+| `workspace` | string? | any | If set, rule applies only to matching-workspace chunks. |
+| `threadId` | string? | any | If set, rule applies only to matching-thread chunks. |
 | `boost` | number? | `1.0` | Added to a matching chunk's score. |
 | `requiredTags` | string[]? | `[]` | A matching-scope chunk lacking these tags is excluded. |
 
@@ -52,9 +54,16 @@ are optional; sensible defaults apply.
 | `pattern` | string | — | Source for a `RegExp`; compiled with the global flag. |
 | `replacement` | string? | `[REDACTED]` | Replacement text. Supports `$1` group refs. |
 
-The baseline ruleset (always on) redacts emails, AWS access keys, bearer
-tokens, and `apiKey/secret/token/password` assignments. Disable defaults by
+The baseline ruleset (always on) redacts email and phone PII plus
+high-confidence credential families (GitHub, Slack, Google, Stripe, AWS,
+Anthropic, OpenAI-shaped `sk-`, JWT, npm, PEM private keys, bearer tokens, and
+generic `apiKey/secret/token/password` assignments). Disable defaults by
 constructing a `Sanitizer` with `useDefaults = false`.
+
+Invalid documents fail at load time: `validateConfig(json)` (and the CLI
+`validate-config` command) reject unknown keys, wrong types, and regexes that
+will not compile, with a dotted path on the first error. `new Fabric(config)`
+runs the same check.
 
 ## Python core parity
 

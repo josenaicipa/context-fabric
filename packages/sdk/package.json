@@ -1,6 +1,6 @@
 {
   "name": "@context-fabric/sdk",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Public client SDK for Context Fabric: scope-aware, sanitized, budget-aware LLM context assembly. Zero runtime dependencies.",
   "license": "MIT",
   "repository": {
@@ -40,6 +40,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node --test dist/test/*.test.js",
+    "test:coverage": "npm run build && node --test --experimental-test-coverage --test-coverage-include=dist/src/** dist/test/*.test.js",
     "clean": "rm -rf dist",
     "prepack": "cp ../../LICENSE ./LICENSE",
     "prepublishOnly": "npm run build && npm test"

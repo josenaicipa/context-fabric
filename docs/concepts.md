@@ -15,6 +15,8 @@ A single retrievable unit of context.
 | `text` | string | Content body. |
 | `project` | string | Owning project scope, e.g. `acme-shop`. |
 | `channel` | string? | Optional channel scope, e.g. `#acme-shop`. |
+| `workspace` | string? | Optional workspace scope. Both-sides mismatch is a hard exclude. |
+| `threadId` | string? | Optional conversation-thread stamp. Thread-private chunks never enter a sibling thread or an unfocused request; unstamped chunks are thread-wide fallback. |
 | `tags` | string[]? | Free-form routing labels. |
 | `sensitivity` | `public \| internal \| restricted`? | Classification. |
 | `score` | number? | Optional pre-computed relevance; higher is better. |
@@ -25,7 +27,9 @@ A single retrievable unit of context.
 | --- | --- | --- |
 | `query` | string | The user/agent query. |
 | `project` | string | Required scope. Chunks from other projects are excluded. |
-| `channel` | string? | Optional; boosts matching chunks. |
+| `channel` | string? | Optional; boosts matching chunks. Hard-excludes a different named channel. |
+| `workspace` | string? | Optional; hard-excludes a different named workspace. |
+| `threadId` | string? | Optional thread focus. See `ContextChunk.threadId`. |
 | `tags` | string[]? | Boosts chunks with overlapping tags. |
 | `maxChunks` | number? | Cap on routed chunks (default 20). |
 
@@ -56,9 +60,11 @@ Results are sorted by score and capped at `maxChunks`.
 ### 2. Sanitizer
 
 Redacts secrets/PII from each routed chunk's text. A baseline ruleset covers
-emails, AWS keys, bearer tokens, and `key=secret` assignments. Extra rules come
-from configuration. Sanitizing is immutable: a clean chunk is returned
-unchanged by reference; a redacted chunk is a new object.
+email and phone PII plus high-confidence credential families (see
+[configuration](./configuration.md)). Extra rules come from configuration.
+Sanitizing is immutable: a clean chunk is returned unchanged by reference; a
+redacted chunk is a new object. Text is NFKC-normalized and stripped of
+zero-width/control characters before scanning.
 
 ### 3. Budgeter
 

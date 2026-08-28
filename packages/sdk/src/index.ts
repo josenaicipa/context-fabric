@@ -1,11 +1,13 @@
 export { Budgeter } from "./budgeter.js";
-export type { BudgetResult } from "./budgeter.js";
+export type { BudgetDrop, BudgetResult } from "./budgeter.js";
 export { Fabric } from "./fabric.js";
-export { Router } from "./router.js";
-export { DEFAULT_RULES, Sanitizer, SanitizerRuleError } from "./sanitizer.js";
+export { Router, isCriticalChunk } from "./router.js";
+export type { RouteDecision, RouteReason } from "./router.js";
+export { DEFAULT_RULES, Sanitizer, SanitizerRuleError, normalizeForScan } from "./sanitizer.js";
+export { ConfigError, validateConfig } from "./config.js";
 export { buildPack } from "./packs.js";
 export { renderAgentContext } from "./handoff.js";
-export { runEvals } from "./evals.js";
+export { runEvals, evalReportToMarkdown } from "./evals.js";
 export { memoryRecordsToChunks } from "./memory.js";
 export { createAssemblePayload, createDebugHtmlPayload } from "./api.js";
 export { ContextFabricClient, ContextFabricRequestError } from "./client.js";
@@ -26,6 +28,19 @@ export {
   runRolloutSmoke,
   rolloutReportToMarkdown,
 } from "./rollout.js";
+export {
+  explainRoute,
+  routeReportToMarkdown,
+  emptyDiagnostic,
+  emptyDiagnosticToText,
+} from "./diagnostics.js";
+export type { ChunkDiagnostic, RouteReport, EmptyDiagnostic } from "./diagnostics.js";
+export {
+  defaultIsolationCases,
+  runIsolationScorecard,
+  isolationScorecardToMarkdown,
+} from "./isolation.js";
+export type { IsolationCase, IsolationCaseResult, IsolationScorecard } from "./isolation.js";
 export type { ChannelRoute, RouterDecision } from "./channelRouter.js";
 export type { PolicyAudit, PolicyFinding } from "./policy.js";
 export type { RepoPackInput } from "./repoPack.js";
@@ -49,4 +64,4 @@ export type { FabricOptions } from "./fabric.js";
 export type { ChannelScope, PreflightInput, PreflightResult } from "./preflight.js";
 export * from "./schemas.js";
 
-export const VERSION = "1.0.0";
+export const VERSION = "1.1.0";

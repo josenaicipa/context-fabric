@@ -72,3 +72,51 @@ test("must_keep chunks are not lost to maxChunks", () => {
     ["critical"],
   );
 });
+
+test("workspace mismatch is hard-excluded when both sides are set", () => {
+  const chunks = [
+    chunk({ id: "in", project: "acme", workspace: "demo", score: 1 }),
+    chunk({ id: "out", project: "acme", workspace: "example", score: 9 }),
+  ];
+  const routed = new Router().route(req({ workspace: "demo", channel: undefined }), chunks);
+  assert.deepEqual(
+    routed.map((c) => c.id),
+    ["in"],
+  );
+});
+
+test("thread-private chunks never enter a sibling thread", () => {
+  const chunks = [
+    chunk({ id: "billing", project: "acme", channel: "#acme", threadId: "t-bill", score: 1 }),
+    chunk({ id: "support", project: "acme", channel: "#acme", threadId: "t-sup", score: 9 }),
+    chunk({ id: "wide", project: "acme", channel: "#acme", score: 1 }),
+  ];
+  const routed = new Router().route(req({ threadId: "t-bill" }), chunks);
+  assert.deepEqual(routed.map((c) => c.id).sort(), ["billing", "wide"]);
+});
+
+test("thread-private chunks stay out of an unfocused request", () => {
+  const chunks = [
+    chunk({ id: "wide", project: "acme", channel: "#acme", score: 1 }),
+    chunk({ id: "private", project: "acme", channel: "#acme", threadId: "t-bill", score: 9 }),
+  ];
+  const routed = new Router().route(req(), chunks);
+  assert.deepEqual(
+    routed.map((c) => c.id),
+    ["wide"],
+  );
+});
+
+test("inspect reports required_tags and max_chunks reasons", () => {
+  const router = new Router([{ project: "acme", requiredTags: ["approved"] }]);
+  const chunks = [
+    chunk({ id: "ok", project: "acme", channel: "#acme", tags: ["approved"], score: 1 }),
+    chunk({ id: "no-tags", project: "acme", channel: "#acme", score: 1 }),
+    chunk({ id: "extra", project: "acme", channel: "#acme", tags: ["approved"], score: 0 }),
+  ];
+  const decisions = router.inspect(req({ maxChunks: 1 }), chunks);
+  const byId = new Map(decisions.map((d) => [d.chunk.id, d.reason]));
+  assert.equal(byId.get("ok"), "kept");
+  assert.equal(byId.get("no-tags"), "required_tags");
+  assert.equal(byId.get("extra"), "max_chunks");
+});

@@ -4,12 +4,15 @@ export type Sensitivity = "public" | "internal" | "restricted";
 export type TaskType = "general" | "code" | "research" | "qa" | "summarize" | "agent_handoff";
 export type DropReason =
   | "out_of_scope"
+  | "out_of_scope_workspace"
+  | "out_of_scope_thread"
   | "required_tags"
   | "candidate_excluded"
   | "duplicate"
   | "sensitivity_blocked"
   | "per_chunk_cap"
-  | "over_budget";
+  | "over_budget"
+  | "max_chunks";
 
 export interface Citation {
   sourceId: string;
@@ -28,6 +31,12 @@ export interface ContextChunk {
   sensitivity?: Sensitivity;
   score?: number;
   workspace?: string;
+  /**
+   * Optional conversation-thread stamp. Thread-private chunks (this set) never
+   * enter a sibling thread or an unfocused (no-thread) request. Unstamped
+   * chunks are thread-wide fallback.
+   */
+  threadId?: string;
   source?: Citation;
 }
 
@@ -39,6 +48,8 @@ export interface ContextRequest {
   tags?: string[];
   maxChunks?: number;
   workspace?: string;
+  /** Thread focus nested under channel. See {@link ContextChunk.threadId}. */
+  threadId?: string;
   taskType?: TaskType;
   budgetProfile?: string;
   maxSensitivity?: Sensitivity;
@@ -51,6 +62,7 @@ export interface RoutingRule {
   boost?: number;
   requiredTags?: string[];
   workspace?: string;
+  threadId?: string;
   taskType?: TaskType;
 }
 
@@ -78,6 +90,12 @@ export interface PolicyWarning {
   message: string;
 }
 
+/** One redaction-rule firing counted while sanitizing a bundle. */
+export interface RedactionEvent {
+  rule: string;
+  count: number;
+}
+
 export interface ContextBundle {
   request: ContextRequest;
   chunks: ContextChunk[];
@@ -88,12 +106,13 @@ export interface ContextBundle {
   droppedChunks: DroppedChunk[];
   warnings: PolicyWarning[];
   budgetProfile: string;
+  redactionEvents: RedactionEvent[];
 }
 
 export interface ContextPack {
   version: string;
   id: string;
-  scope: { workspace?: string; project?: string; channel?: string };
+  scope: { workspace?: string; project?: string; channel?: string; threadId?: string };
   summary: string;
   sources: Citation[];
   chunks: ContextChunk[];
