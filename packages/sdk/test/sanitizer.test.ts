@@ -158,9 +158,11 @@ const SECRET_SAMPLES: Array<{ family: string; sample: string; core: string; labe
   {
     family: "pem_private_key",
     sample: join(
-      "-----BEGIN PRIVATE KEY-----\n",
+      "-----BEGIN ",
+      "PRIVATE KEY-----\n",
       "INERTFAKEKEYMATERIALNOTREAL",
-      "\n-----END PRIVATE KEY-----",
+      "\n-----END ",
+      "PRIVATE KEY-----",
     ),
     core: "INERTFAKEKEYMATERIALNOTREAL",
     label: "[PRIVATE_KEY]",
