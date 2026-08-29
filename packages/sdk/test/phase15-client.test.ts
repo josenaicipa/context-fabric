@@ -10,7 +10,7 @@ import {
 } from "../src/index.js";
 
 test("version is the release candidate", () => {
-  assert.equal(VERSION, "1.0.0");
+  assert.equal(VERSION, "1.1.0");
 });
 
 test("client sends bearer token only when configured", async () => {

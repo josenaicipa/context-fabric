@@ -40,12 +40,45 @@ export interface SecretPatternDef {
  */
 export const SECRET_PATTERN_DEFS: ReadonlyArray<SecretPatternDef> = [
   { name: "aws_access_key", detect: "AKIA[0-9A-Z]{16}", replacement: "[AWS_KEY]" },
+  {
+    name: "aws_secret_assignment",
+    detect: "aws[_-]?secret[_-]?access[_-]?key['\"]?\\s*[:=]\\s*['\"]?[A-Za-z0-9/+=]{40}",
+    replacement: "AWS_SECRET_ACCESS_KEY=[AWS_SECRET]",
+  },
   { name: "github_pat", detect: "github_pat_[A-Za-z0-9_]{30,}", replacement: "[GITHUB_TOKEN]" },
   { name: "github_token", detect: "ghp_[A-Za-z0-9]{36}", replacement: "[GITHUB_TOKEN]" },
+  { name: "github_oauth", detect: "gho_[A-Za-z0-9]{36}", replacement: "[GITHUB_TOKEN]" },
+  { name: "github_user", detect: "ghu_[A-Za-z0-9]{36}", replacement: "[GITHUB_TOKEN]" },
+  { name: "github_server", detect: "ghs_[A-Za-z0-9]{36}", replacement: "[GITHUB_TOKEN]" },
+  { name: "github_refresh", detect: "ghr_[A-Za-z0-9]{36}", replacement: "[GITHUB_TOKEN]" },
   { name: "slack_token", detect: "xox[baprs]-[A-Za-z0-9-]{10,}", replacement: "[SLACK_TOKEN]" },
   { name: "google_api_key", detect: "AIza[0-9A-Za-z_\\-]{35}", replacement: "[GOOGLE_API_KEY]" },
   { name: "stripe_live_key", detect: "sk_live_[0-9a-zA-Z]{24,}", replacement: "[STRIPE_KEY]" },
+  { name: "stripe_test_key", detect: "sk_test_[0-9a-zA-Z]{24,}", replacement: "[STRIPE_KEY]" },
+  {
+    name: "stripe_restricted_key",
+    detect: "rk_(?:live|test)_[0-9a-zA-Z]{24,}",
+    replacement: "[STRIPE_KEY]",
+  },
+  {
+    name: "stripe_webhook_secret",
+    detect: "whsec_[A-Za-z0-9]{24,}",
+    replacement: "[STRIPE_WEBHOOK_SECRET]",
+  },
+  // Provider-shaped `sk-` prefixes must run before the generic `sk-` family.
+  { name: "anthropic_key", detect: "sk-ant-[A-Za-z0-9_\\-]{20,}", replacement: "[ANTHROPIC_KEY]" },
+  {
+    name: "openai_project_key",
+    detect: "sk-(?:proj|svcacct|admin)-[A-Za-z0-9_\\-]{20,}",
+    replacement: "[OPENAI_KEY]",
+  },
   { name: "secret_key_sk", detect: "sk-[A-Za-z0-9]{32,}", replacement: "[SECRET_KEY]" },
+  { name: "npm_token", detect: "npm_[A-Za-z0-9]{36,}", replacement: "[NPM_TOKEN]" },
+  {
+    name: "jwt_token",
+    detect: "eyJ[A-Za-z0-9_\\-]{10,}\\.[A-Za-z0-9_\\-]{10,}\\.[A-Za-z0-9_\\-]{10,}",
+    replacement: "[JWT]",
+  },
   {
     name: "pem_private_key",
     detect: "-----BEGIN [A-Z ]*PRIVATE KEY-----",
@@ -79,7 +112,7 @@ export const SECRET_PATTERN_DEFS: ReadonlyArray<SecretPatternDef> = [
  * stay in lockstep with sanitizer redaction.
  */
 export function secretDetectionPatterns(): RegExp[] {
-  return SECRET_PATTERN_DEFS.map((def) => new RegExp(def.detect));
+  return SECRET_PATTERN_DEFS.map((def) => new RegExp(def.detect, "i"));
 }
 
 /**

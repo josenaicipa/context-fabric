@@ -1,6 +1,7 @@
 /** End-to-end public fabric pipeline: route -> sanitize -> dedupe -> budget. */
 import { createHash } from "node:crypto";
 import { Budgeter } from "./budgeter.js";
+import { validateConfig } from "./config.js";
 import { isCriticalChunk, Router } from "./router.js";
 import { Sanitizer } from "./sanitizer.js";
 import {
@@ -11,6 +12,7 @@ import {
   type ContextRequest,
   type DroppedChunk,
   type FabricConfig,
+  type RedactionEvent,
   type Sensitivity,
   type TokenCounter,
 } from "./schemas.js";
@@ -52,9 +54,9 @@ export class Fabric {
   private readonly countTokens: TokenCounter;
 
   constructor(config: FabricConfig = {}, options: FabricOptions = {}) {
-    this.config = config;
-    this.router = new Router(config.routing ?? []);
-    this.sanitizer = new Sanitizer(config.sanitization ?? []);
+    this.config = validateConfig(config);
+    this.router = new Router(this.config.routing ?? []);
+    this.sanitizer = new Sanitizer(this.config.sanitization ?? []);
     this.countTokens = options.tokenCounter ?? tokenEstimate;
   }
 
@@ -67,14 +69,21 @@ export class Fabric {
   }
 
   assemble(request: ContextRequest, chunks: ContextChunk[]): ContextBundle {
-    const routed = this.router.route(request, chunks);
-    const routedIds = new Set(routed.map((c) => c.id));
-    const droppedChunks: DroppedChunk[] = chunks
-      .filter((c) => !routedIds.has(c.id))
-      .map((c) => ({ id: c.id, reason: "out_of_scope", tokens: this.countTokens(c.text) }));
+    const decisions = this.router.inspect(request, chunks);
+    const droppedChunks: DroppedChunk[] = [];
     const warnings = [];
+    for (const decision of decisions) {
+      if (decision.reason === "kept") continue;
+      droppedChunks.push({
+        id: decision.chunk.id,
+        reason: decision.reason,
+        tokens: this.countTokens(decision.chunk.text),
+      });
+    }
+    // Preserve router rank (critical first, then score) rather than corpus order.
+    const ranked = this.router.route(request, chunks);
     const maxSensitivity = request.maxSensitivity ?? DEFAULT_MAX_SENSITIVITY;
-    const allowed = routed.filter((chunk) => {
+    const allowed = ranked.filter((chunk) => {
       if ((chunk.tags ?? []).includes("candidate") && !request.includeCandidates) {
         droppedChunks.push({
           id: chunk.id,
@@ -114,22 +123,30 @@ export class Fabric {
     }
     const sanitized: ContextChunk[] = [];
     let redactions = 0;
+    const eventCounts = new Map<string, number>();
     for (const chunk of deduped) {
       const result = this.sanitizer.sanitizeChunk(chunk);
       sanitized.push(result.chunk);
       redactions += result.redactions;
+      for (const event of result.events) {
+        eventCounts.set(event.rule, (eventCounts.get(event.rule) ?? 0) + event.count);
+      }
     }
+    const redactionEvents: RedactionEvent[] = [...eventCounts.entries()].map(([rule, count]) => ({
+      rule,
+      count,
+    }));
     const { name, budgeter } = this.budgetFor(request);
-    const { kept, dropped, totalTokens } = budgeter.fit(sanitized);
+    const { kept, droppedDetails, totalTokens } = budgeter.fit(sanitized);
     const sanitizedById = new Map(sanitized.map((chunk) => [chunk.id, chunk]));
     const criticalBudgetDrops: string[] = [];
-    for (const id of dropped) {
-      const chunk = sanitizedById.get(id);
-      if (chunk && isCriticalChunk(chunk)) criticalBudgetDrops.push(id);
+    for (const detail of droppedDetails) {
+      const chunk = sanitizedById.get(detail.id);
+      if (chunk && isCriticalChunk(chunk)) criticalBudgetDrops.push(detail.id);
       droppedChunks.push({
-        id,
-        reason: "over_budget",
-        tokens: chunk ? this.countTokens(chunk.text) : undefined,
+        id: detail.id,
+        reason: detail.reason,
+        tokens: detail.tokens,
       });
     }
     if (criticalBudgetDrops.length > 0) {
@@ -150,6 +167,7 @@ export class Fabric {
       droppedChunks,
       warnings,
       budgetProfile: name,
+      redactionEvents,
     };
   }
 }

@@ -8,6 +8,7 @@ export function renderAgentContext(bundle: ContextBundle): string {
     `- Workspace: ${bundle.request.workspace ?? "n/a"}`,
     `- Project: ${bundle.request.project}`,
     `- Channel: ${bundle.request.channel ?? "n/a"}`,
+    `- Thread: ${bundle.request.threadId ?? "n/a"}`,
     `- Task type: ${bundle.request.taskType ?? "general"}`,
     `- Budget profile: ${bundle.budgetProfile}`,
     `- Total tokens estimate: ${bundle.totalTokens}`,

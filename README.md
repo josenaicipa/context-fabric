@@ -86,6 +86,14 @@ node packages/sdk/dist/src/cli.js eval \
   --query "support" --project acme-shop --channel "#acme-shop" \
   --chunks examples/chunks.json --config examples/fabric.config.json \
   --expect c2 --forbid c3
+node packages/sdk/dist/src/cli.js validate-config --config examples/fabric.config.json
+node packages/sdk/dist/src/cli.js diagnose \
+  --query "checkout" --project acme-shop --channel "#acme-shop" \
+  --chunks examples/chunks.json --format markdown
+node packages/sdk/dist/src/cli.js isolation --format markdown
+node packages/sdk/dist/src/cli.js assemble \
+  --query "billing" --project acme-shop --channel "#acme-shop" \
+  --threadId thread-billing --chunks examples/thread-chunks.json --format text
 node packages/sdk/dist/src/cli.js rollout \
   --policy templates/channel-context-policy.json \
   --smoke examples/rollout-smoke.json --format markdown
@@ -100,6 +108,7 @@ node packages/sdk/dist/src/cli.js rollout \
 - [API client payloads](./docs/API_CLIENT.md) — JSON bodies for API integrations
 - [Packaging](./docs/PACKAGING.md) — release-check and npm pack smoke
 - [Benchmarks](./docs/BENCHMARKS.md) — reliability-first gates plus the current 75% token-reduction target
+- [Routing diagnostics](./docs/DIAGNOSTICS.md) — explain kept/dropped chunks, empty bundles, isolation
 - [Agent preflight](./docs/AGENT_PREFLIGHT.md) — clean-room agent preflight helper
 - [Release candidate](./docs/RELEASE_RC.md) — RC checklist
 - [Concepts](./docs/concepts.md) — the data model and pipeline stages
@@ -115,7 +124,7 @@ node packages/sdk/dist/src/cli.js rollout \
 ## Examples & templates
 
 - [`examples/`](./examples) — runnable generic chunk corpus and config
-- [`templates/`](./templates) — starter config and integration snippets
+- [`templates/`](./templates) — starter config, integration snippet, agent-tool, and chat-messages examples
 - [Stakeholder intake](./templates/stakeholder-intake.md) — onboarding questionnaire (placeholders only)
 - [Rollout readiness checklist](./templates/rollout-readiness-checklist.md) — pre-go-live acceptance gate
 - [Handoff message](./templates/handoff-message.md) — sample team/client handoff note
@@ -149,3 +158,7 @@ The RC adds public agent preflight helpers, clean-room memory record conversion,
 ## v1.0
 
 Context Fabric v1 adds the stable public SDK surface: preflight, channel routing, budget profiles, policy audit, repo packs, API client, and v1 readiness checks.
+
+## v1.1
+
+v1.1 adds fail-fast config validation, routing diagnostics, thread/workspace isolation, an expanded sanitizer (JWT, more cloud keys, phone PII), and the public isolation scorecard. See [CHANGELOG](./CHANGELOG.md).

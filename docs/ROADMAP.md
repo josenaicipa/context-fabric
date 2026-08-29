@@ -2,29 +2,30 @@
 
 Directional, not a commitment. Items move as priorities and evidence change.
 
-## Now (0.1.x — foundation)
+## Now (1.1.x — diagnostics & isolation)
 
 - [x] Clean-room TypeScript SDK: routing / sanitizing / budgeting pipeline.
-- [x] Reference CLI (`assemble`).
-- [x] Concepts, configuration, and boundary docs.
+- [x] Reference CLI (`assemble`, `pack`, `eval`, `rollout`, `validate-config`,
+      `diagnose`, `isolation`).
+- [x] Concepts, configuration, boundary, and diagnostics docs.
 - [x] Project-maturity scaffolding: CI, boundary doctor, governance docs.
-- [ ] Coverage reporting in CI.
-- [ ] Published, versioned releases of `@context-fabric/sdk`.
+- [x] Coverage reporting in CI.
+- [x] Expanded baseline sanitizer ruleset (JWTs, more cloud keys, phone/PII).
+- [x] Routing diagnostics: explain why a chunk was ranked, excluded, or dropped.
+- [x] Typed config validation with helpful error messages.
+- [x] Pluggable token estimators (heuristic vs. caller-supplied `TokenCounter`).
+- [x] Additional integration templates (agent tool, chat messages).
+- [ ] Published, versioned npm releases of `@context-fabric/sdk`.
 
-## Next (0.2.x — ergonomics & parity)
+## Next (1.x — ergonomics)
 
-- [ ] Expanded baseline sanitizer ruleset (JWTs, more cloud keys, phone/PII).
-- [ ] Pluggable token estimators (heuristic vs. model-tokenizer adapters).
-- [ ] Routing diagnostics: explain why a chunk was ranked, excluded, or dropped.
-- [ ] Typed config validation with helpful error messages (parity with the core
-      loader's fail-fast behaviour).
-- [ ] More framework integration templates beyond the current snippet.
+- [ ] Optional streaming / incremental assembly for very large corpora.
+- [ ] Browser/edge build target validation.
 
 ## Later (exploratory)
 
-- [ ] Browser/edge build target validation.
-- [ ] Streaming / incremental assembly for very large corpora.
-- [ ] Benchmark suite and a published performance budget.
+- [x] Benchmark suite and a published performance budget (public reliability-first gate).
+- [ ] Caching of sanitized chunks keyed by content hash.
 
 ## Non-goals
 

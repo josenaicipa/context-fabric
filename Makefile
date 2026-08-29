@@ -7,7 +7,7 @@
 # to packages/* via the root package.json scripts.
 
 .DEFAULT_GOAL := help
-.PHONY: help install build test lint doctor ci clean
+.PHONY: help install build test coverage lint doctor ci clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) \
@@ -22,6 +22,9 @@ build: ## Compile all workspace packages to dist/
 
 test: ## Build and run the test suites
 	npm test
+
+coverage: ## Build, test, and print Node test coverage
+	npm run test:coverage
 
 lint: ## Run ESLint and the Prettier format check
 	npm run lint

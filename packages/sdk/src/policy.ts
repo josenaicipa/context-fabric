@@ -18,6 +18,8 @@ export function auditChunkScope(
   project: string,
   channel?: string,
   maxSensitivity: Sensitivity = "public",
+  workspace?: string,
+  threadId?: string,
 ): PolicyFinding[] {
   const findings: PolicyFinding[] = [];
   if (chunk.project !== project)
@@ -32,6 +34,20 @@ export function auditChunkScope(
       code: "cross_channel",
       severity: "blocker",
       message: "Chunk channel does not match request",
+      chunkId: chunk.id,
+    });
+  if (workspace && chunk.workspace && chunk.workspace !== workspace)
+    findings.push({
+      code: "cross_workspace",
+      severity: "blocker",
+      message: "Chunk workspace does not match request",
+      chunkId: chunk.id,
+    });
+  if (chunk.threadId !== undefined && chunk.threadId !== threadId)
+    findings.push({
+      code: "cross_thread",
+      severity: "blocker",
+      message: "Thread-private chunk does not match request thread",
       chunkId: chunk.id,
     });
   if (rank[chunk.sensitivity ?? "internal"] > rank[maxSensitivity])
@@ -58,6 +74,8 @@ export function auditBundle(bundle: ContextBundle): PolicyAudit {
       bundle.request.project,
       bundle.request.channel,
       bundle.request.maxSensitivity ?? "public",
+      bundle.request.workspace,
+      bundle.request.threadId,
     ),
   );
   return { passed: findings.every((f) => f.severity !== "blocker"), findings };

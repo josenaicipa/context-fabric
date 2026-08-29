@@ -46,6 +46,9 @@ compose the stages yourself.
 context-fabric assemble \
   --query "checkout" --project acme-shop --channel "#acme-shop" \
   --chunks chunks.json --config fabric.config.json
+context-fabric validate-config --config fabric.config.json
+context-fabric diagnose --query "checkout" --project acme-shop --chunks chunks.json
+context-fabric isolation
 ```
 
 ## Develop

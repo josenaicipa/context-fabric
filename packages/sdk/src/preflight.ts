@@ -14,6 +14,7 @@ export interface ChannelScope {
   project: string;
   workspace?: string;
   channel?: string;
+  threadId?: string;
   taskType?: TaskType;
   budgetProfile?: string;
   maxSensitivity?: Sensitivity;
@@ -48,6 +49,7 @@ export function runPreflight(input: PreflightInput, fabric = new Fabric()): Pref
     project: input.scope.project,
     workspace: input.scope.workspace,
     channel: input.scope.channel,
+    threadId: input.scope.threadId,
     taskType: input.scope.taskType ?? "agent_handoff",
     budgetProfile: input.scope.budgetProfile ?? "handoff",
     maxSensitivity: input.scope.maxSensitivity ?? DEFAULT_PREFLIGHT_SENSITIVITY,
@@ -58,6 +60,7 @@ export function runPreflight(input: PreflightInput, fabric = new Fabric()): Pref
     project: input.scope.project,
     workspace: input.scope.workspace,
     channel: input.scope.channel,
+    threadId: input.scope.threadId,
     includeCandidates: input.includeCandidates,
   });
   const bundle = fabric.assemble(request, [...memoryChunks, ...(input.repoChunks ?? [])]);
@@ -71,6 +74,7 @@ export function runPreflight(input: PreflightInput, fabric = new Fabric()): Pref
       project: input.scope.project,
       channel: input.scope.channel,
       workspace: input.scope.workspace,
+      threadId: input.scope.threadId,
       sensitivity: input.scope.maxSensitivity ?? DEFAULT_PREFLIGHT_SENSITIVITY,
       budgetProfile: bundle.budgetProfile,
     }),

@@ -20,8 +20,9 @@ import.
    project/channel. Cross-project chunks are *hard-excluded*: a chunk from a
    different project can never appear in the bundle, regardless of score.
 2. **Sanitizer** (`sanitizer.ts`) — runs every surviving chunk through a regex
-   redaction ruleset (emails, AWS keys, bearer tokens, generic secret
-   assignments) plus any config-supplied rules. Bias is toward over-redaction.
+   redaction ruleset (email/phone PII plus high-confidence credential families)
+   plus any config-supplied rules. Bias is toward over-redaction. Text is
+   NFKC-normalized before scanning.
 3. **Budgeter** (`budgeter.ts`) — greedily admits chunks in rank order until the
    token ceiling (minus a reserve) is reached; the rest are recorded in
    `droppedChunkIds`.
@@ -49,9 +50,12 @@ is reproducible and dependency-free.
 packages/sdk/
   src/
     fabric.ts      Fabric — the public entry point
-    router.ts      scope-aware ranking
+    router.ts      scope-aware ranking (project/channel/workspace/thread)
     sanitizer.ts   secret/PII redaction
     budgeter.ts    token-budget fitting
+    config.ts      fail-fast FabricConfig validation
+    diagnostics.ts route explanations and empty-bundle hints
+    isolation.ts   public isolation scorecard
     schemas.ts     the data model (types)
     cli.ts         reference CLI
     index.ts       public exports

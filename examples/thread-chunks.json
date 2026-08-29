@@ -1,0 +1,39 @@
+[
+  {
+    "id": "shared",
+    "text": "Acme Shop checkout is a two-step form. This note is channel-wide.",
+    "project": "acme-shop",
+    "channel": "#acme-shop",
+    "tags": ["approved", "checkout"],
+    "sensitivity": "public",
+    "score": 1.0
+  },
+  {
+    "id": "billing-thread",
+    "text": "Billing-thread note: refunds post after the nightly settlement job.",
+    "project": "acme-shop",
+    "channel": "#acme-shop",
+    "threadId": "thread-billing",
+    "tags": ["approved", "billing"],
+    "sensitivity": "public",
+    "score": 1.2
+  },
+  {
+    "id": "support-thread",
+    "text": "Support-thread note: the caller already tried a password reset.",
+    "project": "acme-shop",
+    "channel": "#acme-shop",
+    "threadId": "thread-support",
+    "tags": ["approved", "support"],
+    "sensitivity": "public",
+    "score": 1.2
+  },
+  {
+    "id": "other",
+    "text": "A note from a different project that must never leak into acme-shop bundles.",
+    "project": "other-co",
+    "channel": "#other-co",
+    "tags": ["approved"],
+    "score": 5.0
+  }
+]

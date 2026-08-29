@@ -51,9 +51,9 @@ const candidateCorpus: ContextChunk[] = [
 ];
 
 test("CLI --version prints the SDK version", () => {
-  assert.match(run(["--version"]), /^1\.0\.0/);
-  assert.match(run(["-v"]), /^1\.0\.0/);
-  assert.match(run(["version"]), /^1\.0\.0/);
+  assert.match(run(["--version"]), /^1\.1\.0/);
+  assert.match(run(["-v"]), /^1\.1\.0/);
+  assert.match(run(["version"]), /^1\.1\.0/);
 });
 
 test("CLI --help prints usage and the command list", () => {
@@ -301,4 +301,152 @@ test("CLI rejects malformed --config JSON with a clear error", () => {
     config,
   ]);
   assert.match(stderr, /malformed JSON in --config file/);
+});
+
+test("CLI --help lists diagnose, isolation, and validate-config", () => {
+  const help = run(["--help"]);
+  assert.match(help, /validate-config/);
+  assert.match(help, /diagnose/);
+  assert.match(help, /isolation/);
+});
+
+test("CLI validate-config accepts a well-formed file", () => {
+  const dir = mkdtempSync(join(tmpdir(), "cf-cli-cfg-"));
+  const config = join(dir, "config.json");
+  writeFileSync(
+    config,
+    JSON.stringify({
+      version: 1,
+      routing: [{ project: "acme-shop", boost: 1 }],
+      budget: { maxTokens: 2000 },
+    }),
+  );
+  const out = run(["validate-config", "--config", config]);
+  assert.match(out, /OK: valid config/);
+});
+
+test("CLI validate-config fails closed on unknown keys", () => {
+  const dir = mkdtempSync(join(tmpdir(), "cf-cli-cfg-"));
+  const config = join(dir, "config.json");
+  writeFileSync(config, JSON.stringify({ version: 1, operatorMap: {} }));
+  const { status, stderr } = runExpectFail(["validate-config", "--config", config]);
+  assert.equal(status, 1);
+  assert.match(stderr, /unknown key/);
+});
+
+test("CLI diagnose explains a cross-project drop", () => {
+  const chunks = writeChunks([
+    {
+      id: "in",
+      text: "Acme note.",
+      project: "acme-shop",
+      channel: "#acme-shop",
+      sensitivity: "public",
+      score: 1,
+    },
+    {
+      id: "out",
+      text: "Other note.",
+      project: "other-co",
+      channel: "#other-co",
+      sensitivity: "public",
+      score: 9,
+    },
+  ]);
+  const out = run([
+    "diagnose",
+    "--query",
+    "q",
+    "--project",
+    "acme-shop",
+    "--channel",
+    "#acme-shop",
+    "--chunks",
+    chunks,
+    "--format",
+    "markdown",
+  ]);
+  assert.match(out, /Route diagnostics/);
+  assert.match(out, /out_of_scope/);
+});
+
+test("CLI isolation scorecard passes", () => {
+  const out = run(["isolation", "--format", "markdown"]);
+  assert.match(out, /PASS/);
+});
+
+test("CLI assemble --format text renders empty-bundle diagnostics", () => {
+  const chunks = writeChunks([
+    {
+      id: "int",
+      text: "Internal only.",
+      project: "acme-shop",
+      sensitivity: "internal",
+      score: 1,
+    },
+  ]);
+  const out = run([
+    "assemble",
+    "--query",
+    "q",
+    "--project",
+    "acme-shop",
+    "--chunks",
+    chunks,
+    "--format",
+    "text",
+  ]);
+  assert.match(out, /empty/i);
+  assert.match(out, /sensitivity/);
+});
+
+test("CLI assemble --threadId keeps thread-wide fallback and drops siblings", () => {
+  const chunks = writeChunks([
+    {
+      id: "wide",
+      text: "Shared note.",
+      project: "acme-shop",
+      channel: "#acme-shop",
+      sensitivity: "public",
+      score: 1,
+    },
+    {
+      id: "sib",
+      text: "Sibling thread.",
+      project: "acme-shop",
+      channel: "#acme-shop",
+      threadId: "t-other",
+      sensitivity: "public",
+      score: 9,
+    },
+    {
+      id: "mine",
+      text: "This thread.",
+      project: "acme-shop",
+      channel: "#acme-shop",
+      threadId: "t-mine",
+      sensitivity: "public",
+      score: 1,
+    },
+  ]);
+  const bundle = JSON.parse(
+    run([
+      "assemble",
+      "--query",
+      "q",
+      "--project",
+      "acme-shop",
+      "--channel",
+      "#acme-shop",
+      "--threadId",
+      "t-mine",
+      "--chunks",
+      chunks,
+    ]),
+  );
+  assert.deepEqual(bundle.chunks.map((c: { id: string }) => c.id).sort(), ["mine", "wide"]);
+  const dropped = new Map(
+    bundle.droppedChunks.map((d: { id: string; reason: string }) => [d.id, d.reason]),
+  );
+  assert.equal(dropped.get("sib"), "out_of_scope_thread");
 });
