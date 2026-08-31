@@ -18,9 +18,9 @@
     "benchmark": "npm run build && node scripts/benchmark.mjs"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.4",
-    "eslint": "^9.39.4",
-    "prettier": "^3.8.4",
-    "typescript-eslint": "^8.61.0"
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.9.1",
+    "prettier": "^3.9.6",
+    "typescript-eslint": "^8.68.0"
   }
 }
