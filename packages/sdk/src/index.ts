@@ -9,9 +9,17 @@ export { buildPack } from "./packs.js";
 export { renderAgentContext } from "./handoff.js";
 export { runEvals, evalReportToMarkdown } from "./evals.js";
 export { memoryRecordsToChunks } from "./memory.js";
+export { memoryFabricV2ToRecords, MemoryFabricV2Error } from "./memoryV2.js";
 export { createAssemblePayload, createDebugHtmlPayload } from "./api.js";
 export { ContextFabricClient, ContextFabricRequestError } from "./client.js";
 export { runPreflight } from "./preflight.js";
+export {
+  evaluateScopeProbe,
+  runGuardedPreflight,
+  planProfileRollout,
+  evaluateReadiness,
+  ScopeProbeError,
+} from "./operations.js";
 export { V1_BUDGET_PROFILES, getBudgetProfile } from "./budgetProfiles.js";
 export { DEFAULT_PUBLIC_ROUTES, detectTaskType, resolveChannelRoute } from "./channelRouter.js";
 export { auditBundle, auditChunkScope } from "./policy.js";
@@ -58,10 +66,20 @@ export type {
   RolloutReport,
 } from "./rollout.js";
 export type { MemoryRecord } from "./memory.js";
+export type { MemoryFabricV2Item, MemoryFabricV2Response } from "./memoryV2.js";
 export type { AssemblePayload, DebugHtmlPayload } from "./api.js";
 export type { ContextFabricClientOptions, RequestOptions } from "./client.js";
 export type { FabricOptions } from "./fabric.js";
 export type { ChannelScope, PreflightInput, PreflightResult } from "./preflight.js";
+export type {
+  ScopeRoute,
+  ScopeProbe,
+  ScopeProbeResult,
+  ProfileRolloutSpec,
+  ProfileRolloutChange,
+  ProfileRolloutPlan,
+  ReadinessScorecard,
+} from "./operations.js";
 export * from "./schemas.js";
 
-export const VERSION = "1.1.0";
+export const VERSION = "1.2.0";

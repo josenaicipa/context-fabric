@@ -110,6 +110,8 @@ node packages/sdk/dist/src/cli.js rollout \
 - [Benchmarks](./docs/BENCHMARKS.md) — reliability-first gates plus the current 75% token-reduction target
 - [Routing diagnostics](./docs/DIAGNOSTICS.md) — explain kept/dropped chunks, empty bundles, isolation
 - [Agent preflight](./docs/AGENT_PREFLIGHT.md) — clean-room agent preflight helper
+- [Generic Hermes integration](./docs/HERMES_INTEGRATION.md) — fresh-install template, guarded preflight, and agent-context assembly
+- [v1.2 public capability inventory](./docs/PARITY_V1_2.md) — portable parity and deliberate exclusions
 - [Release candidate](./docs/RELEASE_RC.md) — RC checklist
 - [Concepts](./docs/concepts.md) — the data model and pipeline stages
 - [Configuration](./docs/configuration.md) — config file reference
@@ -125,6 +127,7 @@ node packages/sdk/dist/src/cli.js rollout \
 
 - [`examples/`](./examples) — runnable generic chunk corpus and config
 - [`templates/`](./templates) — starter config, integration snippet, agent-tool, and chat-messages examples
+- [Hermes configuration template](./templates/hermes-context-fabric.config.json) — environment-parameterized, host-neutral shape
 - [Stakeholder intake](./templates/stakeholder-intake.md) — onboarding questionnaire (placeholders only)
 - [Rollout readiness checklist](./templates/rollout-readiness-checklist.md) — pre-go-live acceptance gate
 - [Handoff message](./templates/handoff-message.md) — sample team/client handoff note
@@ -162,3 +165,7 @@ Context Fabric v1 adds the stable public SDK surface: preflight, channel routing
 ## v1.1
 
 v1.1 adds fail-fast config validation, routing diagnostics, thread/workspace isolation, an expanded sanitizer (JWT, more cloud keys, phone PII), and the public isolation scorecard. See [CHANGELOG](./CHANGELOG.md).
+
+## v1.2
+
+v1.2 adds guarded agent preflight, retrieval v2 conversion, declarative idempotent profile rollout, readiness checks, and a generic Hermes integration template. See [CHANGELOG](./CHANGELOG.md).

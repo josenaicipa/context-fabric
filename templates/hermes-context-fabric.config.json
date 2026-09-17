@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "provider": {
+    "retrievalCommandEnv": "CONTEXT_FABRIC_RETRIEVAL_COMMAND",
+    "providerSessionEnv": "CONTEXT_FABRIC_PROVIDER_SESSION"
+  },
+  "profiles": [
+    {
+      "id": "YOUR_AGENT_PROFILE",
+      "scope": {
+        "project": "YOUR_PROJECT",
+        "channel": "#YOUR_CHANNEL",
+        "maxSensitivity": "internal"
+      }
+    }
+  ]
+}

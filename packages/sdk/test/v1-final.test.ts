@@ -12,7 +12,7 @@ import {
 
 test("v1 readiness contract is true", () => {
   const ready = v1Readiness();
-  assert.equal(VERSION, "1.1.0");
+  assert.equal(VERSION, "1.2.0");
   assert.equal(ready.ready, true);
   assert.ok(ready.gates.includes("opus-audit"));
 });
