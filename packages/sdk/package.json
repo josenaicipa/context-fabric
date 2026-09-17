@@ -1,6 +1,6 @@
 {
   "name": "@context-fabric/sdk",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Public client SDK for Context Fabric: scope-aware, sanitized, budget-aware LLM context assembly. Zero runtime dependencies.",
   "license": "MIT",
   "repository": {

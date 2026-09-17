@@ -10,6 +10,24 @@ minor versions may carry breaking changes; they are called out below.
 
 _No unreleased changes._
 
+## [1.2.0] — 2026-09-17
+
+### Added
+
+- Guarded agent preflight and scope probes that fail closed when project,
+  channel, route, provider session, or reachability evidence is absent.
+- Generic retrieval v2 adapter with healthy-session validation and conflicting
+  scope filtering.
+- Declarative, idempotent profile rollout planning and an aggregated readiness
+  scorecard. These helpers make no filesystem or host changes.
+- Generic Hermes configuration and preflight templates, a from-scratch
+  integration guide, and the public v1.2 capability inventory.
+
+### Security
+
+- The new operational interfaces use opaque session handles and never require
+  host paths, profile discovery, routing maps, or provider credentials.
+
 ## [1.1.0] — 2026-08-27
 
 ### Added
@@ -114,6 +132,7 @@ _No unreleased changes._
   boundary.
 
 [Unreleased]: https://keepachangelog.com/en/1.1.0/
+[1.2.0]: https://github.com/josenaicipa/context-fabric/releases/tag/v1.2.0
 [1.1.0]: https://keepachangelog.com/en/1.1.0/
 [1.0.0]: https://keepachangelog.com/en/1.1.0/
 [0.1.0]: https://keepachangelog.com/en/1.1.0/

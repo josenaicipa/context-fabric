@@ -51,9 +51,9 @@ const candidateCorpus: ContextChunk[] = [
 ];
 
 test("CLI --version prints the SDK version", () => {
-  assert.match(run(["--version"]), /^1\.1\.0/);
-  assert.match(run(["-v"]), /^1\.1\.0/);
-  assert.match(run(["version"]), /^1\.1\.0/);
+  assert.match(run(["--version"]), /^1\.2\.0/);
+  assert.match(run(["-v"]), /^1\.2\.0/);
+  assert.match(run(["version"]), /^1\.2\.0/);
 });
 
 test("CLI --help prints usage and the command list", () => {

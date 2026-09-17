@@ -67,7 +67,7 @@ test("pack, handoff and eval helpers are public-demo usable", () => {
 });
 
 test("public exports keep compatibility", () => {
-  assert.equal(VERSION, "1.1.0");
+  assert.equal(VERSION, "1.2.0");
   assert.ok(DEFAULT_RULES.some((rule) => rule.name === "email"));
   assert.equal(typeof SanitizerRuleError, "function");
 });
