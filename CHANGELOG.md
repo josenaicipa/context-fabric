@@ -10,6 +10,13 @@ minor versions may carry breaking changes; they are called out below.
 
 _No unreleased changes._
 
+## [1.2.1] — 2026-09-17
+
+### Security
+
+- Guarded preflight now rejects input scopes that differ from the externally
+  probed scope or request a higher sensitivity ceiling.
+
 ## [1.2.0] — 2026-09-17
 
 ### Added

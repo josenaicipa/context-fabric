@@ -12,6 +12,7 @@ import {
   type PreflightInput,
   type PreflightResult,
 } from "./preflight.js";
+import type { Sensitivity } from "./schemas.js";
 
 export interface ScopeRoute {
   project: string;
@@ -69,6 +70,29 @@ export function evaluateScopeProbe(probe: ScopeProbe): ScopeProbeResult {
   return { passed: blockers.length === 0, blockers };
 }
 
+const sensitivityRank: Record<Sensitivity, number> = {
+  public: 0,
+  internal: 1,
+  restricted: 2,
+};
+
+function validatePreflightScope(input: PreflightInput, probe: ScopeProbe): ScopeProbeResult {
+  const blockers: string[] = [];
+  const inputScope = input.scope;
+  const probedScope = probe.scope;
+  for (const field of ["project", "channel", "workspace", "threadId"] as const) {
+    if (inputScope[field] !== probedScope[field]) {
+      blockers.push(`input_scope_mismatch:${field}`);
+    }
+  }
+  const inputSensitivity = inputScope.maxSensitivity ?? "public";
+  const probedSensitivity = probedScope.maxSensitivity ?? "public";
+  if (sensitivityRank[inputSensitivity] > sensitivityRank[probedSensitivity]) {
+    blockers.push("input_sensitivity_exceeds_probe");
+  }
+  return { passed: blockers.length === 0, blockers };
+}
+
 /** Run normal assembly only after its external scope provenance has passed. */
 export function runGuardedPreflight(
   input: PreflightInput,
@@ -77,6 +101,8 @@ export function runGuardedPreflight(
 ): PreflightResult {
   const result = evaluateScopeProbe(probe);
   if (!result.passed) throw new ScopeProbeError(result);
+  const scopeResult = validatePreflightScope(input, probe);
+  if (!scopeResult.passed) throw new ScopeProbeError(scopeResult);
   return runPreflight(input, fabric);
 }
 

@@ -54,6 +54,36 @@ test("guarded preflight does not assemble before the external scope probe passes
   );
 });
 
+test("guarded preflight rejects an input scope that differs from the probed scope", () => {
+  const input = { message: "checkout", scope, repoChunks: [] };
+  assert.throws(
+    () => runGuardedPreflight({ ...input, scope: { ...scope, project: "other-co" } }, validProbe),
+    (error: unknown) =>
+      error instanceof ScopeProbeError &&
+      error.result.blockers.includes("input_scope_mismatch:project"),
+  );
+  assert.throws(
+    () => runGuardedPreflight({ ...input, scope: { ...scope, threadId: "thread-2" } }, validProbe),
+    (error: unknown) =>
+      error instanceof ScopeProbeError &&
+      error.result.blockers.includes("input_scope_mismatch:threadId"),
+  );
+});
+
+test("guarded preflight rejects an input sensitivity ceiling wider than the probe", () => {
+  const input = {
+    message: "checkout",
+    scope: { ...scope, maxSensitivity: "restricted" as const },
+    repoChunks: [],
+  };
+  assert.throws(
+    () => runGuardedPreflight(input, validProbe),
+    (error: unknown) =>
+      error instanceof ScopeProbeError &&
+      error.result.blockers.includes("input_sensitivity_exceeds_probe"),
+  );
+});
+
 test("profile rollout plans are declarative, fail closed, and idempotent", () => {
   const first = planProfileRollout([
     { id: "agent-a", ...validProbe, settings: { contextFabric: { enabled: false } } },
